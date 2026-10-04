@@ -1,0 +1,4 @@
+{#- One feed row: optional day divider, exchange header when a new exchange starts, the row. -#}
+{%- if r.day_break %}<li class="day-break" aria-hidden="true">{{ r.day_break }}</li>{% endif -%}
+{%- if not r.cont or r.day_break %}{% include "_tx_head.html" %}{% endif -%}
+{% include "_tx_item.html" %}

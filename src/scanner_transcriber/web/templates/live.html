@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{% if anchor %}Around {{ anchor | local('%b %d %H:%M') }}{% else %}Live{% endif %}{% endblock %}
+{% block content %}
+<div class="feed-controls">
+  <form class="jump" method="get" action="/">
+    {% if tg_param %}<input type="hidden" name="tg" value="{{ tg_param }}">{% endif %}
+    <label for="jump-at">Jump to</label>
+    <input id="jump-at" type="datetime-local" name="at" value="{{ anchor_input }}"
+           {% if min_input %}min="{{ min_input }}"{% endif %} max="{{ max_input }}" required>
+    <button class="btn" type="submit">Go</button>
+    <details class="shortcuts">
+      <summary class="btn link">Quick</summary>
+      <div>{% for label, value in shortcuts %}<a href="/?at={{ value }}{% if tg_param %}&tg={{ tg_param }}{% endif %}">{{ label }}</a>{% endfor %}</div>
+    </details>
+  </form>
+  <label class="toggle"><input type="checkbox" id="hide-nospeech"> Hide no-speech</label>
+  {% if not anchor %}<button type="button" class="btn" id="pause" aria-pressed="false">Pause</button>{% endif %}
+  {% if anchor %}<button type="button" class="btn" data-play-all title="Play the transmissions shown, oldest first, then the newer ones after them">⏵⏵ Play all</button>
+  {% else %}<button type="button" class="btn" data-play-all title="Play the transmissions shown, oldest first, then keep playing new ones as they come in">⏵⏵ Catch up &amp; listen live</button>{% endif %}
+</div>
+
+{% include "_tg_chips.html" %}
+
+{% if error %}<p class="card level-warn">{{ error }}</p>{% endif %}
+
+{% if anchor %}
+<div class="anchor-bar">
+  <span>Showing around <b>{{ anchor | local('%a %b %d, %H:%M') }}</b></span>
+  <a class="btn" href="/{% if tg_param %}?tg={{ tg_param }}{% endif %}">Back to live</a>
+</div>
+{% if purged %}<p class="muted small">Some audio from this period has been removed by retention; the transcripts remain.</p>{% endif %}
+{% endif %}
+
+<ol id="feed" class="feed" data-mode="{{ 'anchor' if anchor else 'live' }}" data-tg="{{ tg_param }}" data-max-rows="{{ max_rows }}">
+  {% if anchor %}
+    {% set direction = 'newer' %}{% set rows_newer = rows[:n_newer] %}
+    {% if rows_newer %}
+    <li class="more more-newer"><button type="button" class="btn"
+        hx-get="/fragments/feed?after={{ rows_newer[0].cursor }}&tg={{ tg_param }}"
+        hx-target="closest li" hx-swap="outerHTML">Newer</button></li>
+    {% endif %}
+    {% for r in rows_newer %}{% include "_tx_row.html" %}{% endfor %}
+    <li class="anchor-mark" id="anchor"><span>{{ anchor | local('%H:%M') }}</span></li>
+    {% for r in rows[n_newer:] %}{% include "_tx_row.html" %}{% endfor %}
+    {% set older_rows = rows[n_newer:] %}
+    {% if older_rows | length >= page_size // 2 %}
+    <li class="more more-older"><button type="button" class="btn"
+        hx-get="/fragments/feed?before={{ older_rows[-1].cursor }}&tg={{ tg_param }}"
+        hx-target="closest li" hx-swap="outerHTML">Load older</button></li>
+    {% elif not rows %}
+    <li class="more end"><span class="muted">Nothing recorded around this time{% if tgs %} on the selected talkgroups{% endif %}.</span></li>
+    {% endif %}
+  {% else %}
+    {% set direction = 'older' %}
+    {% if rows %}{% include "_tx_rows.html" %}
+    {% else %}<li class="more end"><span class="muted">Nothing recorded yet{% if tgs %} on the selected talkgroups{% endif %}.</span></li>{% endif %}
+  {% endif %}
+</ol>
+<button id="new-pill" class="new-pill" type="button" hidden></button>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{% if q %}“{{ q }}”{% else %}Search{% endif %}{% endblock %}
+{% block content %}
+<form class="search-form" method="get" action="/search">
+  <div class="search-main">
+    <input type="search" name="q" value="{{ q }}" placeholder="Words, parts of words, or &quot;an exact phrase&quot;" aria-label="Search transcripts" autofocus>
+    <button class="btn primary" type="submit">Search</button>
+  </div>
+  <div class="search-filters">
+    <label>From <input type="datetime-local" name="from" value="{{ from_input }}" max="{{ max_input }}"></label>
+    <label>To <input type="datetime-local" name="to" value="{{ to_input }}" max="{{ max_input }}"></label>
+    <span class="ranges">{% for label, link in ranges %}<a href="{{ link }}">{{ label }}</a>{% endfor %}</span>
+    <label>Department
+      <select name="department">
+        <option value="">Any</option>
+        {% for d in departments %}<option value="{{ d }}" {% if f.department == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="toggle"><input type="checkbox" name="has_audio" value="1" {% if f.has_audio %}checked{% endif %}> Has audio</label>
+    <label class="toggle"><input type="checkbox" name="include_no_speech" value="1" {% if f.include_no_speech %}checked{% endif %}> Include no-speech</label>
+    {% if tgs %}<input type="hidden" name="tg" value="{{ tgs | join(',') }}">{% endif %}
+  </div>
+  {% if chips %}
+  <nav class="chips" aria-label="Talkgroups">
+    <a class="chip-tg" href="{{ all_tg_href }}" {% if not tgs %}aria-current="true"{% endif %}>All talkgroups</a>
+    {% for t, on, link in chips %}
+      <a class="chip-tg" style="--h: {{ t.hue }}" href="{{ link }}" {% if on %}aria-current="true"{% endif %}
+         title="{{ t.department or '' }}, TG {{ t.tgid }}"><span class="swatch" aria-hidden="true"></span>{{ t.name }}{% if t.qualifier %} <span class="q">{{ t.qualifier }}</span>{% endif %}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+</form>
+
+{% for e in errors %}<p class="card level-warn">{{ e }}</p>{% endfor %}
+
+{% if asked and not errors %}
+  <p class="result-count">{% if total %}{{ total }} match{{ 'es' if total != 1 }}{% if total > rows | length %}, newest first{% endif %}
+     <button type="button" class="btn small-btn" data-play-all title="Play the results shown, oldest first">⏵⏵ Play all</button>{% else %}No transmissions match{% endif %}</p>
+  {% if not total %}
+  <p class="muted">Try fewer words, a shorter part of a word (e.g. <em>quar</em> for Quarry), or remove a filter.</p>
+  {% endif %}
+  <ol id="results" class="feed">{% include "_search_rows.html" %}</ol>
+{% elif not errors %}
+  <section class="card search-help">
+    <h2>How search works</h2>
+    <ul>
+      <li><b>Words</b> can be in any order: <code>mill road</code></li>
+      <li><b>Parts of words</b> of 3+ letters match too: <code>quar</code> finds Quarry, <code>140</code> finds Medic 1403</li>
+      <li><b>Exact phrase</b>: <code>"traffic stop"</code></li>
+      <li><b>Exclude</b> a word: <code>-test</code></li>
+      <li>Leave the box empty to browse by talkgroup, department or time.</li>
+    </ul>
+  </section>
+{% endif %}
+{% endblock %}

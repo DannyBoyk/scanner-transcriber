@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Listen live{% endblock %}
+{% block content %}
+<section class="listen" aria-labelledby="listen-h">
+  <button type="button" class="listen-btn" id="listen-btn" aria-pressed="false" aria-label="Start listening">
+    <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+    <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="1.5" fill="currentColor"/></svg>
+  </button>
+  <div class="listen-text">
+    <h1 id="listen-h">Listen live</h1>
+    <p>Everything the scanner hears, as one continuous stream, a few seconds behind the radio. It keeps playing with the screen locked or in the background.</p>
+    <p class="listen-state" id="listen-state" role="status">Not playing</p>
+    {% include "_listen_info.html" %}
+  </div>
+</section>
+<audio id="listen-audio" preload="none"></audio>
+<p class="muted small listen-notes">Use your phone's volume buttons; the stream is already levelled to a steady loudness. It also plays in VLC or a car's browser: <code>{{ request.base_url }}stream.mp3</code></p>
+
+<script>
+(function () {
+  "use strict";
+  const audio = document.getElementById("listen-audio");
+  const btn = document.getElementById("listen-btn");
+  const state = document.getElementById("listen-state");
+  let wanted = false, retry = null, attempts = 0, lastTime = 0, lastMove = 0;
+  const say = (t) => { state.textContent = t; };
+
+  function setButton(on) {
+    btn.setAttribute("aria-pressed", String(on));
+    btn.setAttribute("aria-label", on ? "Stop listening" : "Start listening");
+    btn.classList.toggle("on", on);
+  }
+  function connect() {
+    clearTimeout(retry);
+    audio.src = "/stream.mp3?t=" + Date.now();          // a fresh connection
+    say(attempts ? "Reconnecting…" : "Connecting…");
+    audio.play().catch(() => {
+      // iOS won't start a new source without a tap while the phone is locked / in background
+      if (wanted) say("Paused by the phone. Tap ▶ to resume.");
+      wanted = false; setButton(false);
+    });
+  }
+  function claimMediaSession() {
+    // lock-screen / car controls belong to whichever player started last (the clip player
+    // claims them when it plays); this page claims them when the stream starts
+    if (!("mediaSession" in navigator)) return;
+    window.__mediaOwner = "stream";
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: "Scanner – live", artist: "Scanner Transcriber" });
+    } catch (e) { /* older browsers */ }
+    for (const [action, fn] of [["play", start], ["pause", stop], ["stop", stop],
+                                ["nexttrack", null], ["previoustrack", null]]) {
+      try { navigator.mediaSession.setActionHandler(action, fn); } catch (e) { /* unsupported action */ }
+    }
+  }
+  function start() {
+    if (window.Player) window.Player.stop();           // the clip player and the stream never overlap
+    wanted = true; attempts = 0; setButton(true); claimMediaSession(); connect();
+  }
+  function stop() {
+    wanted = false; clearTimeout(retry); setButton(false);
+    audio.pause(); audio.removeAttribute("src"); audio.load();
+    say("Not playing");
+  }
+  function reconnectSoon() {
+    // only for a stream that really ended or failed; back off 3, 6, 12 … 30 s
+    if (!wanted) return;
+    clearTimeout(retry);
+    const delay = Math.min(30000, 3000 * 2 ** Math.min(attempts, 4));
+    attempts += 1;
+    say("Connection lost, reconnecting…");
+    retry = setTimeout(connect, delay);
+  }
+  btn.addEventListener("click", () => (wanted ? stop() : start()));
+  audio.addEventListener("playing", () => { if (wanted) { attempts = 0; say("Playing live"); } });
+  audio.addEventListener("waiting", () => { if (wanted) say("Buffering…"); });
+  // "stalled" is not here on purpose: Safari fires it on healthy live streams and recovers by
+  // itself; reconnecting then (a new source while locked) is what used to stop playback.
+  ["error", "ended"].forEach((ev) => audio.addEventListener(ev, reconnectSoon));
+  audio.addEventListener("timeupdate", () => {
+    if (audio.currentTime !== lastTime) { lastTime = audio.currentTime; lastMove = Date.now(); }
+  });
+  // watchdog while the page is visible: audio frozen for 15 s although we want it → reconnect
+  setInterval(() => {
+    if (wanted && !audio.paused && document.visibilityState === "visible"
+        && lastMove && Date.now() - lastMove > 15000) { lastMove = Date.now(); reconnectSoon(); }
+  }, 5000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && wanted && audio.paused) connect();
+  });
+})();
+</script>
+{% endblock %}

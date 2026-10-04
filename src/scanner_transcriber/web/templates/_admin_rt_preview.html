@@ -1,0 +1,9 @@
+<div id="rt-preview" class="rt-preview">
+  {% if p.error %}<p class="error">{{ p.error }}</p>
+  {% elif p.count == 0 %}<p class="muted">No transcribed clips match. Widen the time range or pick other talkgroups.</p>
+  {% else %}
+  <p><b>{{ p.count }}</b> clip{{ 's' if p.count != 1 }}{% if p.over_cap %}: only the oldest {{ p.capped }} will be done in one batch{% endif %}.
+     About <b>{{ (p.seconds / 60) | round(0, 'ceil') | int }} min</b> of worker time, spent only when there's no live traffic waiting.</p>
+  <button class="btn primary" type="button" hx-post="/admin/retranscribe" hx-include="#rt-form" hx-target="#retranscribe" hx-swap="outerHTML">Re-transcribe {{ p.capped }} clip{{ 's' if p.capped != 1 }}</button>
+  {% endif %}
+</div>

@@ -1,0 +1,8 @@
+{%- for r in rows %}{% include "_tx_row.html" %}{% endfor -%}
+{%- if rows | length == page_size -%}
+<li class="more more-older"><button type="button" class="btn"
+    hx-get="/fragments/search?{{ qs }}{% if qs %}&{% endif %}before={{ rows[-1].cursor }}"
+    hx-target="closest li" hx-swap="outerHTML">Load more</button></li>
+{%- elif rows -%}
+<li class="more end"><span class="muted small">End of results</span></li>
+{%- endif -%}

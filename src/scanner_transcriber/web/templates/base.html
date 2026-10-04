@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}Scanner{% endblock %} · Scanner Transcriber</title>
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<script>/* theme before first paint: an explicit Light/Dark choice (Auto = follow the device) */
+try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="{{ asset('app.css') if asset is defined else '/static/app.css' }}">
+<script src="{{ asset('htmx.min.js') if asset is defined else '/static/htmx.min.js' }}" defer></script>
+</head>
+<body data-since="{{ since }}">
+<header class="top">
+  <a class="brand" href="/">Scanner</a>
+  <nav>
+    <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Live</a>
+    <a href="/search" {% if request.url.path == '/search' %}aria-current="page"{% endif %}>Search</a>
+    <a href="/channels" {% if request.url.path == '/channels' %}aria-current="page"{% endif %} aria-label="Talkgroups"><span class="nav-full">Talkgroups</span><span class="nav-short" aria-hidden="true">TGs</span></a>
+    <a href="/status" {% if request.url.path == '/status' %}aria-current="page"{% endif %}>Status</a>
+    <a href="/admin" {% if request.url.path.startswith('/admin') or request.url.path == '/login' %}aria-current="page"{% endif %}>Admin</a>
+  </nav>
+  <form class="top-search" method="get" action="/search" role="search">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="Search transcripts" aria-label="Search transcripts">
+  </form>
+  <a class="listen-link" href="/listen" {% if request.url.path == '/listen' %}aria-current="page"{% endif %} aria-label="Listen live" title="Listen live: everything the scanner hears, as one stream">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.75 10.5V8a5.25 5.25 0 0 1 10.5 0v2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="1.75" y="9.25" width="3.25" height="5" rx="1.1" fill="currentColor"/><rect x="11" y="9.25" width="3.25" height="5" rx="1.1" fill="currentColor"/></svg>
+    <span class="listen-label">Listen live</span></a>
+  {# Status dot: updated live by the SSE `status` event (static/app.js). #}
+  <span id="status-dot-slot">{% include "_status_dot.html" %}</span>
+  <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Theme: Auto (follows your device). Click to change." title="Theme: Auto (follows your device)">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.75a6.25 6.25 0 0 0 0 12.5z" fill="currentColor"/></svg>
+  </button>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+{% include "_player_bar.html" %}
+<script src="{{ asset('player.js') if asset is defined else '/static/player.js' }}" defer></script>
+<script src="{{ asset('app.js') if asset is defined else '/static/app.js' }}" defer></script>
+</body>
+</html>

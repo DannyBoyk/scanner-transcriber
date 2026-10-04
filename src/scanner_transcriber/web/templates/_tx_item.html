@@ -1,0 +1,23 @@
+<li id="tx-{{ r.id }}" style="--h: {{ r.hue }}" class="tx{% if r.no_speech %} no-speech{% endif %}{% if r.pending %} pending{% endif %}{% if r.flags %} flagged{% endif %}{% if r.status == 'failed' %} failed{% endif %}"
+    data-cursor="{{ r.cursor }}" data-tg="{{ r.tgid or '' }}" data-started="{{ r.started_at }}" data-ended="{{ r.ended_at }}" data-day="{{ r.day }}"
+    data-label="{{ r.label }}" data-hue="{{ r.hue }}" data-time="{{ r.started.strftime('%H:%M:%S') }}"
+    data-text="{{ r.transcript or '' }}"{% if r.has_audio %} data-src="/api/transmissions/{{ r.id }}/audio"{% endif %}{% if r.no_speech %} data-nospeech="1"{% endif %}>
+  <a class="tx-time" href="/t/{{ r.id }}" title="{{ r.started.strftime('%a %b %d %Y, %H:%M:%S') }}"><time datetime="{{ r.started_at }}">{{ r.started.strftime('%H:%M:%S') }}</time></a>
+  {%- if r.has_audio %}
+  <span class="play-group">
+    <button class="play" type="button" data-src="/api/transmissions/{{ r.id }}/audio" aria-label="Play transmission at {{ r.started.strftime('%H:%M:%S') }}"><span aria-hidden="true">▶</span></button>
+    <button class="play-from" type="button" aria-label="Play from here onwards" title="Play from here onwards"><span aria-hidden="true">⏵⏵</span></button>
+  </span>
+  {%- else %}
+  <span class="play none" title="Audio removed by retention" aria-label="Audio removed">–</span>
+  {%- endif %}
+  <p class="tx-text">
+    {%- if r.pending %}<span class="muted">transcribing…</span>
+    {%- elif r.status == 'failed' %}<span class="muted">transcription failed</span>
+    {%- elif r.status == 'skipped' %}<span class="muted">not transcribed (ignored channel)</span>
+    {%- elif r.no_speech %}<span class="muted">no speech</span>
+    {%- else %}{{ r.transcript_html or r.transcript }}{% endif -%}
+    {%- for f, note in r.flag_notes %} <span class="chip" title="{{ note }}">{{ f | replace('_', ' ') }}</span>{% endfor -%}
+  </p>
+  <span class="tx-aside">{% if r.unit %}<span class="tx-unit" title="Unit ID">#{{ r.unit }}</span>{% endif %}<span class="tx-dur">{{ '%.1f' % r.duration_s }}s</span></span>
+</li>

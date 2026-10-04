@@ -1,0 +1,5 @@
+<p class="muted small listen-info" id="listen-info" hx-get="/fragments/listen-info" hx-trigger="every 10s" hx-swap="outerHTML">
+  {%- if stream.listeners == 0 -%}Nobody is listening right now.
+  {%- elif stream.listeners == 1 -%}1 listener now.
+  {%- else -%}{{ stream.listeners }} listeners now.{%- endif -%}
+</p>

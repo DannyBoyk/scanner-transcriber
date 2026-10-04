@@ -1,0 +1,8 @@
+<div id="detail-text" class="detail-text"
+     {% if r.pending %}hx-get="/fragments/tx-text/{{ r.id }}" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+  {%- if r.pending %}<p class="muted big">Transcribing…</p>
+  {%- elif r.status == 'failed' %}<p class="muted big">Transcription failed{% if tx.error %}: <span class="mono small">{{ tx.error }}</span>{% endif %}</p>
+  {%- elif r.status == 'skipped' %}<p class="muted big">Not transcribed: this talkgroup is set to ignore.</p>
+  {%- elif r.no_speech %}<p class="muted big">No speech detected.</p>
+  {%- else %}<p class="big">{{ r.transcript }}</p>{% endif %}
+</div>

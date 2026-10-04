@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Batch {{ batch.id }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/admin#retranscribe">← Admin</a></p>
+<h1>Re-transcription batch {{ batch.id }}</h1>
+<p class="muted">{{ batch.done }}/{{ batch.total }} done{% if batch.finished %}, {{ batch.changed }} changed{% endif %}{% if batch.prompt_version %} · prompt version {{ batch.prompt_version }}{% endif %} · started {{ batch.created_at | local('%b %d %H:%M') }}</p>
+<p class="filters">
+  <a href="?changed=1" {% if changed %}aria-current="true"{% endif %}>Changed only</a>
+  <a href="?changed=0" {% if not changed %}aria-current="true"{% endif %}>All</a>
+</p>
+{% if rows %}
+<ol class="compare">
+  {% for r in rows %}
+  <li style="--h: {{ r.hue }}">
+    <div class="cmp-meta"><a href="/t/{{ r.id }}">{{ r.started.strftime('%b %d %H:%M:%S') }}</a> <b>{{ r.label }}</b> <span class="muted small">{{ r.department or '' }}</span>
+      <span class="muted small">v{{ r.prev_prompt_version or '?' }} → v{{ r.prompt_version or '…' }}</span></div>
+    {% if r.diff is none %}<p class="muted">{{ 'transcribing…' if r.status in ('queued', 'processing') else r.status }}</p>
+    {% else %}
+    <p class="diff">{% for op, t in r.diff %}{% if op == 'eq' %}{{ t }}{% elif op == 'del' %}<del>{{ t }}</del>{% else %}<ins>{{ t }}</ins>{% endif %}{% endfor %}</p>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% else %}<p class="muted">{% if changed %}Nothing changed{% if not batch.finished %} yet{% endif %}.{% else %}No clips.{% endif %}</p>{% endif %}
+{% endblock %}

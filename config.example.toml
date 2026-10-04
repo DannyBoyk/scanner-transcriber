@@ -1,0 +1,58 @@
+[scanner]
+id = "sds200-1"
+host = "192.168.1.11"
+control_port = 50536
+rtsp_port = 554
+# If the scanner refuses audio while its control channel answers (the SDS200 "audio lockout",
+# docs/sds200-rtsp-lockout.md), reboot it with the remote command MSM,0.
+auto_reboot = true
+auto_reboot_after_s = 180        # refused this long → reboot
+auto_reboot_grace_s = 150        # never this soon after capture starts
+auto_reboot_min_interval_s = 900 # at most one reboot per 15 min
+auto_reboot_max_tries = 3        # then stop and ask for a power cycle
+psi_interval_ms = 250
+
+[storage]
+data_dir = "data"
+
+[segmenter]
+debounce_ms = 400        # Mute shorter than this inside one PTT is ignored
+preroll_ms = 300         # audio kept from before the Unmute status
+pad_ms = 100             # silence kept around trimmed speech
+min_clip_ms = 400        # minimum non-silent span to keep a clip
+max_clip_s = 60          # longer transmissions are split ("continued")
+audio_latency_ms = 0     # status applied this much later on the audio timeline
+status_stale_ms = 2000   # no status for this long -> segment on audio alone
+split_on_unit_change = true  # scanner can stay unmuted from one unit's PTT into another's reply
+unit_gap_ms = 200        # silence marking that handoff
+
+[stt]
+# The Whisper vocabulary prompt and the substitution map are edited on the Admin page
+# (versioned, applied without a restart). A `prompt = """..."""` or [stt.substitutions]
+# here is only imported once, into an empty database; after that it's ignored.
+lead_silence_ms = 500           # silence put in front of short clips before transcription
+lead_silence_max_clip_ms = 2000 # (Whisper fumbles first words otherwise); 0 = off
+
+[status]                    # when the status turns amber/red (see docs/m3-plan.md)
+reconnect_error_s = 60      # scanner unreachable longer than this is red (shorter: amber)
+backlog_warn_s = 120        # oldest untranscribed clip waiting longer than this
+backlog_error_s = 600
+disk_warn_pct = 10
+disk_warn_gb = 5
+disk_error_gb = 2
+
+[web]
+bind = "127.0.0.1"          # 127.0.0.1 = this machine only (e.g. behind `tailscale serve`
+                            # for HTTPS); "*" = every interface; or one address
+port = 8080
+page_size = 50
+live_max_rows = 300         # live feed keeps at most this many rows in the browser
+timezone = ""               # e.g. "America/New_York"; empty = system local time
+
+[retention]                 # 0 = keep forever
+audio_days = 90             # clip WAVs (row + transcript kept)
+raw_days = 90               # raw scanner status XML on each row
+transcript_days = 365       # whole rows: transcript, metadata, search entries
+event_days = 30             # status-page event log
+prompt_tests_keep = 100     # newest Admin prompt-test results
+run_every_minutes = 60

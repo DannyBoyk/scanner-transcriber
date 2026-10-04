@@ -1,0 +1,11 @@
+{#- Talkgroup filter chips; refreshed by app.js as new transmissions arrive. -#}
+<nav class="chips" id="tg-chips" aria-label="Filter by talkgroup"{% if not talkgroups %} hidden{% endif %}>
+  {% set base = '/?at=' ~ anchor_input ~ '&' if anchor else '/?' %}
+  <a href="{{ base }}" class="chip-tg" {% if not tgs %}aria-current="true"{% endif %}>All</a>
+  {% for t in talkgroups %}
+    {% set on = t.tgid in tgs %}
+    {% set next = (tgs | reject('equalto', t.tgid) | list) if on else (tgs + [t.tgid]) %}
+    <a class="chip-tg{% if t.hidden %} hidden-tg{% endif %}" data-tg="{{ t.tgid }}" href="{{ base }}{% if next %}tg={{ next | join(',') }}{% endif %}" {% if on %}aria-current="true"{% endif %}
+       style="--h: {{ t.hue }}" title="{{ t.department or '' }}, TG {{ t.tgid }}: {{ t.n }} in the last 24 h{% if t.hidden %} (hidden from the live feed; tap to show){% endif %}"><span class="swatch" aria-hidden="true"></span>{{ t.name }}{% if t.qualifier %} <span class="q">{{ t.qualifier }}</span>{% endif %}<span class="n">{{ t.n }}</span></a>
+  {% endfor %}
+</nav>

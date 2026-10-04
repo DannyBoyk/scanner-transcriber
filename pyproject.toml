@@ -1,0 +1,51 @@
+[project]
+name = "scanner-transcriber"
+version = "0.0.1"
+description = "Self-hosted SDS200 scanner logger with local speech-to-text"
+requires-python = ">=3.12"
+license = "0BSD"
+license-files = ["LICENSE"]
+dependencies = [
+    "sds200==0.30.0",
+    "numpy>=2.0",
+    "soxr>=0.5",
+]
+
+[project.optional-dependencies]
+# Runtime transcription: whisper-small.en on the iGPU + Parakeet 110M (CPU) for degraded
+# mode and speech checks.
+worker = [
+    "openvino-genai>=2026.4",
+    "huggingface_hub>=0.30",
+    "sherpa-onnx==1.13.8",
+    "sherpa-onnx-core==1.13.8",
+]
+# Web UI (M3): server-rendered pages + htmx (vendored under web/static, no CDN).
+web = [
+    "fastapi>=0.140",
+    "uvicorn>=0.50",
+    "jinja2>=3.1",
+    "lameenc>=1.8",           # MP3 encoding for the Listen live stream (M6)
+    "tokenizers>=0.20",       # Admin prompt editor: exact Whisper token count
+]
+# Benchmark harness and the other M0 candidate runtimes.
+bench = [
+    "jiwer>=3.0",
+    "psutil>=6.0",
+    "faster-whisper>=1.2",
+    "onnx-asr[cpu,hub]>=0.12",
+    "useful-moonshine-onnx>=20251121",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "httpx2>=2.7"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scanner_transcriber"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

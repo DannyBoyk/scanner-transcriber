@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ r.label }} {{ started_local.strftime('%H:%M:%S') }}{% endblock %}
+{% macro mini(rows) -%}
+  {%- for x in rows %}
+  <li><a href="/t/{{ x.id }}"><time>{{ x.started.strftime('%H:%M:%S') }}</time>
+      <span class="{{ 'muted' if x.no_speech or x.pending else '' }}">{{ 'transcribing…' if x.pending else ('no speech' if x.no_speech else (x.transcript or '—')) }}</span></a></li>
+  {%- endfor %}
+{%- endmacro %}
+{% block content %}
+<p class="crumbs"><a href="/?at={{ started_local.strftime('%Y-%m-%dT%H:%M') }}">← Back to the feed at {{ started_local.strftime('%H:%M') }}</a></p>
+
+<article class="detail" style="--h: {{ r.hue }}">
+  <header class="detail-head">
+    <h1>{{ r.label }}{% if r.department %} <span class="muted">{{ r.department }}</span>{% endif %}</h1>
+    <p class="muted">{{ started_local.strftime('%A, %B %d %Y at %H:%M:%S') }}{% if r.tgid %}, TG {{ r.tgid }}{% endif %}</p>
+  </header>
+
+  {% if r.has_audio %}
+  <div class="detail-audio">
+    <audio controls preload="metadata" src="/api/transmissions/{{ r.id }}/audio"></audio>
+    <a class="btn" href="/api/transmissions/{{ r.id }}/audio?download=1" download="{{ download }}">Download</a>
+  </div>
+  {% else %}
+  <p class="muted">The audio for this transmission has been removed by retention. The transcript remains.</p>
+  {% endif %}
+
+  {% include "_detail_text.html" %}
+
+  {% if tx.flags %}
+  <ul class="flag-notes">
+    {% for f in tx.flags %}<li><span class="chip">{{ f | replace('_', ' ') }}</span> {{ flag_text.get(f, f) }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% if tx.raw_transcript and tx.raw_transcript != tx.transcript %}
+  <p class="alt"><span class="muted">Model's original output:</span> {{ tx.raw_transcript or '(empty)' }}</p>
+  {% endif %}
+  {% if tx.alt_transcript %}
+  <p class="alt"><span class="muted">Second model heard:</span> {{ tx.alt_transcript }}</p>
+  {% endif %}
+</article>
+
+<div class="grid">
+<section class="card">
+  <h2>Transmission</h2>
+  <dl>
+    <dt>Started</dt><dd>{{ started_local.strftime('%H:%M:%S') }} <span class="muted small">({{ utc_time }} UTC)</span></dd>
+    <dt>Duration</dt><dd>{{ '%.1f' % r.duration_s }} s</dd>
+    {% if tx.system %}<dt>System</dt><dd>{{ tx.system }}</dd>{% endif %}
+    {% if tx.site %}<dt>Site</dt><dd>{{ tx.site }}</dd>{% endif %}
+    {% if tx.department %}<dt>Department</dt><dd>{{ tx.department }}</dd>{% endif %}
+    {% if tx.channel %}<dt>Channel</dt><dd>{{ tx.channel }}{% if tx.alias %} <span class="muted">(shown as {{ tx.alias }})</span>{% endif %}</dd>{% endif %}
+    {% if tx.tgid %}<dt>Talkgroup</dt><dd>{{ tx.tgid }}</dd>{% endif %}
+    <dt>Unit{{ 's' if tx.unit_ids | length > 1 }}</dt><dd>{% for u in tx.unit_ids %}{{ u | replace('UID:', '#') }}{% if not loop.last %}, {% endif %}{% else %}<span class="muted">not reported</span>{% endfor %}</dd>
+    {% if tx.frequency_hz %}<dt>Frequency</dt><dd>{{ '%.4f' % (tx.frequency_hz / 1e6) }} MHz</dd>{% endif %}
+    {% if tx.rssi is not none %}<dt>Signal</dt><dd>{{ tx.rssi }} dBm</dd>{% endif %}
+    {% if tx.continued %}<dt>Note</dt><dd>Continues a long transmission that was split in parts.</dd>{% endif %}
+    {% if tx.status_missing %}<dt>Note</dt><dd>Cut from the audio alone: scanner status wasn't arriving at the time, so the talkgroup label may be stale.</dd>{% endif %}
+  </dl>
+</section>
+
+<section class="card">
+  <h2>Transcription</h2>
+  <dl>
+    <dt>Status</dt><dd>{{ tx.status }}{% if tx.attempts > 1 %} <span class="muted">after {{ tx.attempts }} attempts</span>{% endif %}</dd>
+    {% if tx.stt_model %}<dt>Model</dt><dd class="small">{{ tx.stt_model }}{% if 'degraded' in tx.flags %} <span class="muted">(CPU fallback)</span>{% endif %}</dd>{% endif %}
+    {% if tx.stt_ms %}<dt>Took</dt><dd>{{ '%.1f' % (tx.stt_ms / 1000) }} s</dd>{% endif %}
+    {% if tx.transcribed_at %}<dt>Transcribed</dt><dd>{{ tx.transcribed_at | local('%H:%M:%S') }}{% if latency_s is not none %}, {{ '%.0f' % latency_s }} s after it ended{% endif %}</dd>{% endif %}
+    {% if tx.error and tx.status != 'failed' %}<dt>Last error</dt><dd class="mono small">{{ tx.error }}</dd>{% endif %}
+  </dl>
+</section>
+</div>
+
+{% if before or after %}
+<section class="card context">
+  <h2>On this talkgroup around then</h2>
+  {#- chronological, top to bottom -#}
+  {% if before %}<ol class="mini">{{ mini(before | reverse) }}</ol>{% endif %}
+  <p class="here"><time>{{ started_local.strftime('%H:%M:%S') }}</time> {{ r.transcript or 'this transmission' }}</p>
+  {% if after %}<ol class="mini">{{ mini(after | reverse) }}</ol>{% endif %}
+  <p class="nav">
+    {% if before %}<a class="btn" href="/t/{{ before[0].id }}">Previous</a>{% endif %}
+    {% if after %}<a class="btn" href="/t/{{ after[-1].id }}">Next</a>{% endif %}
+  </p>
+</section>
+{% endif %}
+
+<details class="card raw">
+  <summary>Raw scanner data</summary>
+  {% if tx.status_changes %}
+  <h3>Status changes during the transmission</h3>
+  <ol class="changes">
+    {% for ch in tx.status_changes %}
+    <li><time>{{ ch.wall | local('%H:%M:%S') }}</time>
+      {% for k, v in ch.fields | dictsort if v %}<span class="kv">{{ k }}={{ v }}</span>{% endfor %}</li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  {% if tx.raw_status %}<h3>Scanner status when it started</h3><pre class="mono">{{ tx.raw_status }}</pre>{% endif %}
+</details>
+{% endblock %}

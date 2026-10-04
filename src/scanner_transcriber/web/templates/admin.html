@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Admin</h1>
+  <form method="post" action="/logout"><button class="btn" type="submit">Log out</button></form>
+</div>
+<nav class="filters admin-nav" aria-label="Admin sections">
+  <a href="#prompt">Prompt</a><a href="#subs">Substitutions</a><a href="#evals">Prompt test</a><a href="#retranscribe">Re-transcribe</a><a href="#controls">Scanner &amp; worker</a><a href="#logs">Logs</a><a href="#clean">Clean start</a>
+  {% block admin_nav_more %}{% endblock %}
+</nav>
+{% include "_admin_prompt.html" %}
+{% include "_admin_subs.html" %}
+{% include "_admin_evals.html" %}
+{% include "_admin_retranscribe.html" %}
+{% include "_admin_controls.html" %}
+{% include "_admin_logs.html" %}
+{% include "_admin_clean.html" %}
+{% block admin_more %}{% endblock %}
+{% endblock %}

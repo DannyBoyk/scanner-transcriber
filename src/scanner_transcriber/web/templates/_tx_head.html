@@ -1,0 +1,5 @@
+<li class="xhead" style="--h: {{ r.hue }}">
+  <span class="xhead-name">{{ r.label }}</span>
+  {%- if r.department %}<span class="xhead-dept">{{ r.department }}</span>{% endif %}
+  {%- if r.tgid %}<span class="xhead-tg">TG {{ r.tgid }}</span>{% endif %}
+</li>

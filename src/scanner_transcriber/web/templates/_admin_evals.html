@@ -1,0 +1,32 @@
+<section class="card admin-section" id="evals"
+         {% if evals_running %}hx-get="/admin/fragments/evals" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  <h2>Prompt test</h2>
+  <p class="muted small">Scores a prompt against the {{ labelled_clips }} hand-labelled clips (word error rate: lower is better). Runs only while there's no live traffic waiting, about {{ eval_minutes }} min.
+  Those clips were also used to tune earlier prompts, so treat differences of a few points as noise.</p>
+  {% if not labelled_clips %}<p class="warn-text">No hand-labelled clips found under data/sessions/*/refs.jsonl.</p>{% endif %}
+  <button class="btn" hx-post="/admin/prompt-test" hx-target="#evals" hx-swap="outerHTML" {% if not labelled_clips %}disabled{% endif %}>Test the active prompt</button>
+  <span class="muted small">Or use “Test” in the prompt history, or “Test without saving” for a draft.</span>
+  {% if evals %}
+  <table class="evals">
+    <thead><tr><th>When</th><th>Prompt</th><th>Result</th><th></th></tr></thead>
+    <tbody>
+    {% for e in evals %}
+    <tr>
+      <td>{{ e.created_at | local('%b %d %H:%M') }}</td>
+      <td>{% if e.draft_body %}draft{% else %}version {{ e.prompt_version }}{% endif %}</td>
+      <td>
+        {% if e.status == 'done' %}<b>WER {{ '%.1f' % (e.wer * 100) }}%</b> <span class="muted small">CER {{ '%.1f' % (e.cer * 100) }}%, {{ e.clips }} clips</span>
+          {% if e.detail.worst %}<details><summary class="small">Worst clips</summary><ul class="worst">
+            {% for w in e.detail.worst %}<li><span class="muted small">{{ '%.0f' % (w.wer * 100) }}%</span> ref: {{ w.ref }}<br>got: {{ w.hyp or '(nothing)' }}</li>{% endfor %}
+          </ul></details>{% endif %}
+        {% elif e.status == 'running' %}<span class="muted">running: {{ e.clips or 0 }}/{{ labelled_clips }} clips…</span>
+        {% elif e.status == 'queued' %}<span class="muted">waiting for the worker to be idle…</span>
+        {% else %}<span class="warn-text">{{ e.status }}{% if e.detail.error %}: {{ e.detail.error }}{% endif %}</span>{% endif %}
+      </td>
+      <td>{% if e.status not in ('queued', 'running') %}<button class="btn small-btn" hx-post="/admin/prompt-test/{{ e.id }}/delete" hx-target="#evals" hx-swap="outerHTML" title="Delete this result">Delete</button>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>

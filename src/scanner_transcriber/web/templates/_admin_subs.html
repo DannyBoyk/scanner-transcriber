@@ -1,0 +1,40 @@
+<section class="card admin-section" id="subs">
+  <h2>Substitutions</h2>
+  <p class="muted small">Fix words the model keeps getting wrong in a predictable way (whole words, any case). Applied to new transcripts; the model's original output is kept too.</p>
+  {% if message %}<p class="saved" role="status">{{ message }}</p>{% endif %}
+  <form hx-post="/admin/substitutions" hx-target="#subs" hx-swap="outerHTML">
+    <table class="subs">
+      <thead><tr><th>Heard as</th><th></th><th>Replace with</th></tr></thead>
+      <tbody>
+        {% set active = substitutions_active.value if substitutions_active else {} %}
+        {% for src, dst in active | dictsort %}
+        <tr><td><input name="src" value="{{ src }}"></td><td aria-hidden="true">→</td><td><input name="dst" value="{{ dst }}"></td></tr>
+        {% endfor %}
+        {% for _ in range(3) %}
+        <tr><td><input name="src" placeholder="e.g. Charley"></td><td aria-hidden="true">→</td><td><input name="dst" placeholder="Charlie"></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted small">Clear a row's “Heard as” box to remove it.</p>
+    <div class="admin-row">
+      <input type="text" name="note" placeholder="What changed? (optional)" maxlength="200">
+      <button class="btn primary" type="submit">Save new version</button>
+    </div>
+  </form>
+  <details class="history">
+    <summary>History ({{ substitutions_history | length }})</summary>
+    <ol>
+      {% for v in substitutions_history %}
+      <li class="{{ 'active' if v.active }}">
+        <div class="history-head">
+          <b>Version {{ v.id }}</b> <span class="muted small">{{ v.created_at | local('%b %d %H:%M') }}{% if v.note %}: {{ v.note }}{% endif %}</span>
+          {% if v.active %}<span class="chip">active</span>{% else %}
+          <button class="btn small-btn" hx-post="/admin/versions/{{ v.id }}/activate" hx-target="#subs" hx-swap="outerHTML">Make active</button>{% endif %}
+        </div>
+        {% if v.diff %}<p class="diff">{% for op, t in v.diff %}{% if op == 'ins' %}<ins>{{ t }}</ins> {% else %}<del>{{ t }}</del> {% endif %}{% endfor %}</p>
+        {% else %}<p class="diff muted">{% for k, val in v.value | dictsort %}{{ k }} → {{ val }}{% if not loop.last %}, {% endif %}{% else %}(none){% endfor %}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </details>
+</section>

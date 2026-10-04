@@ -1,0 +1,28 @@
+{#- Continuous-playback bar (static/player.js). Hidden until something plays. -#}
+<audio id="player" preload="none"></audio>
+<div id="player-bar" class="player-bar" hidden role="region" aria-label="Player">
+  <p class="pb-hint" role="status" hidden>Plays from here, then keeps going with new transmissions. ⏹ stops.</p>
+  <div class="pb-mode" hidden>
+    <span class="pb-badge"><span class="pb-dot" aria-hidden="true"></span><span class="pb-mode-name"></span></span>
+    <span class="pb-mode-info"></span>
+  </div>
+  <div class="pb-controls">
+    <button type="button" class="pb-btn" data-pb="prev" aria-label="Previous (←)" title="Previous (←)">⏮</button>
+    <button type="button" class="pb-btn pb-main" data-pb="toggle" aria-label="Play / pause (Space)" title="Play / pause (Space)">⏸</button>
+    <button type="button" class="pb-btn" data-pb="next" aria-label="Next (→)" title="Next (→)">⏭</button>
+    <button type="button" class="pb-btn" data-pb="stop" aria-label="Stop (Esc)" title="Stop (Esc)">⏹<span class="pb-stop-text"></span></button>
+    <label class="pb-speed"><span class="sr-only">Speed</span>
+      <select data-pb="speed" aria-label="Playback speed">
+        <option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option>
+      </select></label>
+    <div class="pb-vol" title="Volume (above 100% boosts quiet audio)">
+      <button type="button" class="pb-vol-btn" data-pb="vol-toggle" aria-label="Volume" aria-expanded="false">🔊</button>
+      <span class="pb-vol-pop"><input type="range" data-pb="volume" min="0" max="200" step="5" value="100" aria-label="Volume">
+        <span class="pb-vol-val">100%</span></span></div>
+  </div>
+  <a class="pb-now" data-pb="now" href="#"><span class="swatch" aria-hidden="true"></span><span class="pb-label"></span> <span class="pb-time muted"></span><span class="pb-text"></span></a>
+  <div class="pb-status">
+    <button type="button" class="btn small-btn" data-pb="live" hidden>Jump to live</button>
+    <button type="button" class="btn small-btn" data-pb="follow" hidden>Follow</button>
+  </div>
+</div>

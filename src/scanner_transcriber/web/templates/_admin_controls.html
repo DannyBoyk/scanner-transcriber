@@ -1,0 +1,31 @@
+{%- set cap = components.get('capture') -%}
+{%- set wk = components.get('worker') -%}
+<section class="card admin-section" id="controls"
+         {% if pending %}hx-get="/admin/fragments/controls" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+  <h2>Scanner &amp; worker</h2>
+  <div class="grid controls-grid">
+    <div>
+      <p><b>Scanner</b>: {{ cap.state if cap else 'never ran' }}{% if cap and cap.detail.connected_since %}, connected since {{ cap.detail.connected_since | local('%b %d %H:%M') }}{% endif %}</p>
+      <button class="btn" hx-post="/admin/commands" hx-vals='{"target": "capture", "action": "reconnect"}' hx-target="#controls" hx-swap="outerHTML">Reconnect scanner</button>
+      <p class="muted small">Closes the audio session cleanly and connects again. Use it if audio seems stuck.</p>
+      <button class="btn" hx-post="/admin/commands" hx-vals='{"target": "capture", "action": "reboot"}' hx-target="#controls" hx-swap="outerHTML"
+              hx-confirm="Reboot the scanner? Audio stops for about 30 seconds.">Reboot scanner</button>
+      <p class="muted small">Restarts the scanner itself (remote command MSM,0), like a power cycle: clears an audio lockout that reconnecting can't. Capture also does this on its own if the scanner refuses audio for {{ auto_reboot_min }} min{% if not auto_reboot %} (turned off in config){% endif %}.{% if cap and cap.detail.last_reboot_at %} Last reboot {{ cap.detail.last_reboot_at | ago }}.{% endif %}</p>
+    </div>
+    <div>
+      <p><b>Worker</b>: {{ wk.state if wk else 'never ran' }}{% if wk and wk.detail.model %} <span class="muted small">({{ wk.detail.model }})</span>{% endif %}</p>
+      <button class="btn" hx-post="/admin/commands" hx-vals='{"target": "worker", "action": "restart"}' hx-target="#controls" hx-swap="outerHTML">Restart worker</button>
+      <p class="muted small">Finishes the current clip, then restarts transcription (reloads the model, about 3–50 s). Prompt changes don't need this.</p>
+    </div>
+  </div>
+  {% if commands %}
+  <h3 class="small-h">Recent requests</h3>
+  <ol class="cmds">
+    {% for c in commands %}
+    <li><time>{{ c.created_at | local('%H:%M:%S') }}</time> {{ c.target }} {{ c.action }}:
+      {% if c.done_at %}<span class="{{ 'warn-text' if c.result and (c.result.startswith('expired') or 'isn' in c.result or 'not ' in c.result) else 'ok-text' }}">{{ c.result }}</span>
+      {% elif c.taken_at %}<span class="muted">working…</span>{% else %}<span class="muted">waiting to be picked up (every 5 s)…</span>{% endif %}</li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</section>

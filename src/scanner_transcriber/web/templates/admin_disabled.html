@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Admin is turned off</h1>
+  <p>Set a password on the NUC to turn it on:</p>
+  <pre class="mono">cd ~/repos/scanner-transcriber
+.venv/bin/python -m scanner_transcriber set-password</pre>
+  <p class="muted">The same password is needed to change talkgroup settings.</p>
+</section>
+{% endblock %}

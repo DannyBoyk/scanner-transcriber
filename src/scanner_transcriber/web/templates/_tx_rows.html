@@ -1,0 +1,26 @@
+{#- Rows for the feed list plus the next "load" control. direction = older (appended below the
+    list) | newer (inserted above it). The control replaces itself when clicked. -#}
+{%- if direction == 'newer' -%}
+  {%- if rows | length == page_size -%}
+  <li class="more more-newer"><button type="button" class="btn"
+      hx-get="/fragments/feed?after={{ rows[0].cursor }}&tg={{ tg_param }}"
+      hx-target="closest li" hx-swap="outerHTML">Newer</button></li>
+  {%- elif rows -%}
+  <li class="more more-newer"><button type="button" class="btn"
+      hx-get="/fragments/feed?after={{ rows[0].cursor }}&tg={{ tg_param }}"
+      hx-target="closest li" hx-swap="outerHTML">Check for newer</button></li>
+  {%- else -%}
+  <li class="more more-newer"><span class="muted small">Nothing newer yet ·</span>
+    <button type="button" class="btn link" onclick="location.reload()">refresh</button></li>
+  {%- endif -%}
+{%- endif -%}
+{%- for r in rows %}{% include "_tx_row.html" %}{% endfor -%}
+{%- if direction == 'older' -%}
+  {%- if rows | length == page_size -%}
+  <li class="more more-older"><button type="button" class="btn"
+      hx-get="/fragments/feed?before={{ rows[-1].cursor }}&tg={{ tg_param }}"
+      hx-target="closest li" hx-swap="outerHTML">Load older</button></li>
+  {%- else -%}
+  <li class="more end"><span class="muted small">{% if rows %}That's everything recorded{% else %}Nothing older{% endif %}</span></li>
+  {%- endif -%}
+{%- endif -%}

@@ -1,0 +1,41 @@
+# Web UI. Independent of capture, so it keeps reporting status while capture is down.
+# Installed by deploy/install.sh, which fills in @USER@ / @REPO@ / @HOME@.
+[Unit]
+Description=Scanner Transcriber: web UI
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory=@REPO@
+ExecStart=@REPO@/.venv/bin/python -m scanner_transcriber web
+Environment=PYTHONUNBUFFERED=1
+Restart=always
+RestartSec=5
+RestartSteps=6
+RestartMaxDelaySec=300
+# open SSE streams are cut after 3 s (uvicorn timeout_graceful_shutdown)
+TimeoutStopSec=15
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=read-only
+# writes: settings/commands in the DB (+ WAL), its own log under data/logs
+ReadWritePaths=@REPO@/data
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

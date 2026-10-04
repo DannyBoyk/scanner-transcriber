@@ -1,0 +1,58 @@
+{%- set url = '/api/channels/' ~ (c.key | urlencode) -%}
+<li class="ch{% if c.hidden %} is-hidden{% endif %}{% if c.ignored %} is-ignored{% endif %}" style="--h: {{ c.hue }}" id="ch-{{ c.tgid or loop_index }}">
+  <div class="ch-id">
+    <span class="swatch big" aria-hidden="true"></span>
+    <div>
+      <div class="ch-name">{{ c.name }}</div>
+      <div class="muted small">{{ c.department or '' }}{% if c.tgid %}{% if c.department %}, {% endif %}TG {{ c.tgid }}{% endif %}{% if c.alias and c.channel %}, scanner name “{{ c.channel }}”{% endif %}</div>
+    </div>
+  </div>
+
+  <div class="ch-activity small">
+    <span title="Last hour"><b>{{ c.n_h1 }}</b> last hour</span>
+    <span title="Since midnight"><b>{{ c.n_today }}</b> today</span>
+    <span title="Last 7 days"><b>{{ c.n_d7 }}</b> 7 days</span>
+    <span class="muted">heard {{ c.last_heard_at | ago }}</span>
+  </div>
+
+  {% if admin %}
+  <div class="ch-settings">
+    <label class="ch-alias">Display name
+      <input type="text" name="alias" value="{{ c.alias or '' }}" placeholder="{{ c.channel or ('TG ' ~ c.tgid) }}" maxlength="60"
+             hx-patch="{{ url }}" hx-trigger="change" hx-target="closest li" hx-swap="outerHTML">
+    </label>
+
+    <div class="ch-colors" role="radiogroup" aria-label="Colour">
+      {%- for h in palette %}
+      <button type="button" class="swatch-btn" style="--h: {{ h }}" role="radio" aria-checked="{{ 'true' if (c.color is not none and c.color % palette|length == loop.index0) else 'false' }}"
+              aria-label="Colour {{ loop.index }}" hx-patch="{{ url }}" hx-vals='{"color": {{ loop.index0 }}}' hx-target="closest li" hx-swap="outerHTML"></button>
+      {%- endfor %}
+    </div>
+
+    <div class="ch-toggles">
+      <button type="button" class="btn toggle-btn" aria-pressed="{{ 'false' if c.ignored else 'true' }}"
+              hx-patch="{{ url }}" hx-vals='{"ignored": {{ 0 if c.ignored else 1 }}}' hx-target="closest li" hx-swap="outerHTML"
+              title="{{ 'Recorded only: audio is kept, not transcribed. Click to transcribe again.' if c.ignored else 'Click to record without transcribing' }}">
+        Transcribe: {{ 'off' if c.ignored else 'on' }}</button>
+      <button type="button" class="btn toggle-btn" aria-pressed="{{ 'false' if c.hidden else 'true' }}"
+              hx-patch="{{ url }}" hx-vals='{"hidden": {{ 0 if c.hidden else 1 }}}' hx-target="closest li" hx-swap="outerHTML"
+              title="{{ 'Hidden from the live feed (still recorded and searchable). Click to show.' if c.hidden else 'Click to hide from the live feed' }}">
+        Live feed: {{ 'hidden' if c.hidden else 'shown' }}</button>
+      {% if not c.ignored and c.n_skipped %}
+      <button type="button" class="btn" hx-post="{{ url }}/transcribe-skipped" hx-target="closest li" hx-swap="outerHTML">
+        Transcribe the {{ c.n_skipped }} clip{{ 's' if c.n_skipped != 1 }} recorded while off</button>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="ch-settings ch-readonly small">
+    <span class="{{ 'warn-text' if c.ignored else 'muted' }}">Transcribe: {{ 'off (record only)' if c.ignored else 'on' }}</span>
+    <span class="{{ 'warn-text' if c.hidden else 'muted' }}">Live feed: {{ 'hidden' if c.hidden else 'shown' }}</span>
+  </div>
+  {% endif %}
+
+  <div class="ch-links small">
+    {% if c.tgid %}<a href="/?tg={{ c.tgid }}">Recent</a><a href="/search?tg={{ c.tgid }}">Search in this talkgroup</a>{% endif %}
+    {% if saved %}<span class="saved" role="status">{{ saved }}</span>{% endif %}
+  </div>
+</li>

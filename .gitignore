@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+data/
+models/
+vendor/
+config.toml
+.venv-ov/
+
+# screenshots (may show real transcripts); docs/screenshots holds demo data only (tests/ui/screenshots.sh)
+*.png
+*.swp
+!src/scanner_transcriber/web/static/*.png
+!docs/screenshots/*.png

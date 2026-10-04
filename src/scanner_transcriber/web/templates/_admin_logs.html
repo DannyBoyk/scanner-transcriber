@@ -1,0 +1,16 @@
+<section class="card admin-section" id="logs"
+         {% if log_auto %}hx-get="/admin/fragments/logs?c={{ log_component }}&level={{ log_level }}&auto=1" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  <h2>Logs</h2>
+  <p class="filters">
+    {% for c in log_components %}<a href="#logs" hx-get="/admin/fragments/logs?c={{ c }}&level={{ log_level }}{% if log_auto %}&auto=1{% endif %}" hx-target="#logs" hx-swap="outerHTML" {% if c == log_component %}aria-current="true"{% endif %}>{{ c }}</a>{% endfor %}
+    <span class="sep"></span>
+    <a href="#logs" hx-get="/admin/fragments/logs?c={{ log_component }}&level=INFO{% if log_auto %}&auto=1{% endif %}" hx-target="#logs" hx-swap="outerHTML" {% if log_level == 'INFO' %}aria-current="true"{% endif %}>All</a>
+    <a href="#logs" hx-get="/admin/fragments/logs?c={{ log_component }}&level=WARNING{% if log_auto %}&auto=1{% endif %}" hx-target="#logs" hx-swap="outerHTML" {% if log_level == 'WARNING' %}aria-current="true"{% endif %}>Warnings &amp; errors</a>
+    <a href="#logs" hx-get="/admin/fragments/logs?c={{ log_component }}&level={{ log_level }}&auto={{ 0 if log_auto else 1 }}" hx-target="#logs" hx-swap="outerHTML" {% if log_auto %}aria-current="true"{% endif %}>{{ 'Auto-refresh on' if log_auto else 'Auto-refresh off' }}</a>
+  </p>
+  {% if log_lines %}
+  <pre class="logview">{% for l in log_lines | reverse %}<span class="lv-{{ l.level | lower }}">{{ l.text }}</span>
+{% endfor %}</pre>
+  <p class="muted small">Newest first. Files: data/logs/{{ log_component }}.log (rotated at 1 MB, 3 kept).</p>
+  {% else %}<p class="muted">No log lines yet for {{ log_component }}{% if log_level == 'WARNING' %} at warning level (good news){% endif %}. Logs are written once the process has been restarted with this version.</p>{% endif %}
+</section>

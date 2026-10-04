@@ -1,0 +1,32 @@
+<section class="card admin-section" id="retranscribe"
+         {% if batches_running %}hx-get="/admin/fragments/retranscribe" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  <h2>Re-transcribe</h2>
+  <p class="muted small">Run past clips through the current prompt and substitutions to see what a change does. Old transcripts are kept for comparison. Live transmissions always go first.</p>
+  {% if message %}<p class="saved" role="status">{{ message }}</p>{% endif %}
+  <form id="rt-form" hx-post="/admin/retranscribe/preview" hx-target="#rt-preview" hx-swap="outerHTML">
+    <div class="search-filters">
+      <label>From <input type="datetime-local" name="from" max="{{ max_input }}"></label>
+      <label>To <input type="datetime-local" name="to" max="{{ max_input }}"></label>
+      <span class="ranges">{% for label, a, b in rt_ranges %}<a href="#" onclick="const f=document.getElementById('rt-form'); f.elements['from'].value='{{ a }}'; f.elements['to'].value='{{ b }}'; return false;">{{ label }}</a>{% endfor %}</span>
+      <label class="toggle"><input type="checkbox" name="include_no_speech" value="1"> Include no-speech</label>
+    </div>
+    {% if rt_talkgroups %}
+    <fieldset class="rt-tgs"><legend class="muted small">Talkgroups (none ticked = all)</legend>
+      {% for t in rt_talkgroups %}<label class="chip-tg" style="--h: {{ t.hue }}"><input type="checkbox" name="tg" value="{{ t.tgid }}"> <span class="swatch" aria-hidden="true"></span>{{ t.name }}{% if t.qualifier %} <span class="q">{{ t.qualifier }}</span>{% endif %}</label>{% endfor %}
+    </fieldset>
+    {% endif %}
+    <button class="btn" type="submit">Preview</button>
+  </form>
+  <div id="rt-preview"></div>
+  {% if batches %}
+  <h3 class="small-h">Batches</h3>
+  <ol class="cmds">
+    {% for b in batches %}
+    <li><time>{{ b.created_at | local('%b %d %H:%M') }}</time> Batch {{ b.id }}: {{ b.done }}/{{ b.total }} done{% if b.finished %}, {{ b.changed }} changed{% else %} <span class="muted">(running)</span>{% endif %}
+      {% if b.prompt_version %}<span class="muted small">prompt v{{ b.prompt_version }}</span>{% endif %}
+      <a href="/admin/batches/{{ b.id }}">Compare</a></li>
+    {% endfor %}
+  </ol>
+  <p class="muted small">Up to {{ max_batch }} clips per batch.</p>
+  {% endif %}
+</section>

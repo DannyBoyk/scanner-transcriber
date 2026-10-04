@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Talkgroups{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Talkgroups</h1>
+  <p class="filters">
+    <a href="/channels" {% if sort == 'recent' %}aria-current="true"{% endif %}>Recently heard</a>
+    <a href="/channels?sort=busy" {% if sort == 'busy' %}aria-current="true"{% endif %}>Busiest</a>
+  </p>
+</div>
+{% if not admin %}
+<p class="card small">{% if admin_enabled %}<a href="/login?next=/channels">Log in</a> to change names, colours and settings.{% else %}Changing settings needs an admin password: see the <a href="/admin">Admin</a> page.{% endif %}</p>
+{% endif %}
+<p class="muted small">Changes save as you make them. <b>Transcribe: off</b> keeps the audio but skips transcription.
+<b>Live feed: hidden</b> keeps a talkgroup off the live page (still recorded, transcribed and searchable).
+To stop the scanner stopping on a talkgroup at all, set it to Avoid on the scanner itself.</p>
+{% if channels %}
+<ul class="channels">
+  {% for c in channels %}{% set loop_index = loop.index %}{% include "_channel_row.html" %}{% endfor %}
+</ul>
+{% else %}
+<section class="card"><p class="muted">No talkgroups heard yet. They appear here as soon as the scanner hears them.</p></section>
+{% endif %}
+{% endblock %}

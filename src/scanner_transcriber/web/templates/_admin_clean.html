@@ -1,0 +1,16 @@
+<section class="card admin-section danger-zone" id="clean">
+  <h2>Clean start</h2>
+  <p>Deletes <b>all transmissions and their audio</b>, the re-transcribe batches, the Status-page event log and the log files, so the system starts over. <b>Kept:</b> talkgroup settings, prompt and substitution versions, labelled clips and prompt tests, and the admin password. There's no undo and no backup.</p>
+  {% if preview %}
+  <p>A clean start now would remove <b>{{ preview.transmissions }}</b> transmissions, <b>{{ preview.audio_files }}</b> audio files ({{ '%.0f' % (preview.audio_bytes / 1e6) }} MB), {{ preview.events }} events, {{ preview.batches }} re-transcribe batches and {{ preview.log_files }} log files.</p>
+  <form hx-post="/admin/clean-start" hx-target="#clean" hx-swap="outerHTML" class="clean-form">
+    <label>Type <code>DELETE</code> to confirm <input type="text" name="confirm" autocomplete="off" required></label>
+    <button class="btn danger" type="submit">Delete everything listed</button>
+  </form>
+  {% elif message %}
+  <p class="{{ 'warn-text' if error else 'ok-text' }}">{{ message }}</p>
+  {% else %}
+  <button class="btn" hx-get="/admin/fragments/clean" hx-target="#clean" hx-swap="outerHTML">Check what it would delete</button>
+  {% endif %}
+  <p class="muted small">Capture runs it within about 5 s, without stopping recording (anything recorded meanwhile is kept). The result appears under “Recent requests” above. With capture stopped, use <code>python -m scanner_transcriber clean-start</code> on the NUC instead.</p>
+</section>

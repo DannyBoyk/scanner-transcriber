@@ -1,0 +1,49 @@
+# Capture (SDS200 audio + status → clips) and the supervised transcription worker.
+# Installed by deploy/install.sh, which fills in @USER@ / @REPO@ / @HOME@.
+[Unit]
+Description=Scanner Transcriber: capture + transcription
+Wants=network-online.target
+After=network-online.target
+# never give up restarting (the backoff below keeps it gentle on the scanner)
+StartLimitIntervalSec=0
+
+[Service]
+Type=notify
+User=@USER@
+WorkingDirectory=@REPO@
+ExecStart=@REPO@/.venv/bin/python -m scanner_transcriber run
+Environment=PYTHONUNBUFFERED=1
+# iGPU (OpenVINO whisper)
+SupplementaryGroups=render video
+
+# restart on any exit that wasn't `systemctl stop`: 5 s, doubling up to 5 min
+Restart=always
+RestartSec=5
+RestartSteps=6
+RestartMaxDelaySec=300
+# the capture heartbeat pings every 5 s; a hung event loop gets restarted
+WatchdogSec=60
+# SIGTERM: capture sends RTSP TEARDOWN, the worker finishes its current clip (≤ 25 s)
+TimeoutStopSec=45
+
+# hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=@REPO@/data @HOME@/.cache
+DevicePolicy=closed
+DeviceAllow=char-drm rw
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+# (no MemoryDenyWriteExecute: OpenVINO compiles GPU kernels at runtime)
+
+[Install]
+WantedBy=multi-user.target

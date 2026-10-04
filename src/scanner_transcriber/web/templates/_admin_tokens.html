@@ -1,0 +1,11 @@
+<div id="token-count" class="token-count level-{{ token_level }}" aria-live="polite">
+  <b>{{ tokens }}</b> / {{ token_limit }} tokens{% if not tokens_exact %} (estimate){% endif %}
+  {%- if token_level == 'error' %} · <span>too long: Whisper only reads the last {{ token_limit }} tokens, so the start of the prompt would be ignored.</span>
+  {%- elif token_level == 'warn' %} · <span>close to the limit</span>{% endif %}
+  {% if leak_hints %}
+  <details class="leak-hints"><summary>{{ leak_hints | length }} phrase pair{{ 's' if leak_hints | length != 1 }} could trigger a re-run</summary>
+    <p class="muted small">If someone says these back to back, the leak guard (4 prompt words in a row) re-transcribes that clip without the prompt. Harmless, just slower.</p>
+    <ul>{% for h in leak_hints %}<li>“{{ h }}”</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+</div>

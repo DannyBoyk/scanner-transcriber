@@ -1,0 +1,5 @@
+{%- set tip = (health.conditions | map(attribute='message') | join('\n')) or 'All systems normal' -%}
+<a class="status-dot level-{{ health.level }}" href="/status" title="{{ tip }}"
+   aria-label="System status: {{ health.level }}. {{ tip }}">
+  <span class="dot" aria-hidden="true"></span><span class="dot-label">{{ {'ok': 'OK', 'warn': 'Warning', 'error': 'Problem'}[health.level] }}</span>
+</a>

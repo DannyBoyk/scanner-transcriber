@@ -1,0 +1,35 @@
+<section class="card admin-section" id="prompt">
+  <h2>Prompt</h2>
+  <p class="muted small">Vocabulary Whisper reads before every transmission: local names and phrases it would otherwise mishear. Saving applies it from the <b>next</b> transmission; nothing restarts.</p>
+  {% if message %}<p class="saved" role="status">{{ message }}</p>{% endif %}
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <form hx-post="/admin/prompt" hx-target="#prompt" hx-swap="outerHTML">
+    <textarea name="prompt" rows="7" spellcheck="true"
+              hx-post="/admin/prompt/count" hx-trigger="input changed delay:300ms" hx-target="#token-count" hx-swap="outerHTML">{{ prompt_active.value if prompt_active else '' }}</textarea>
+    {% include "_admin_tokens.html" %}
+    <div class="admin-row">
+      <input type="text" name="note" placeholder="What changed? (optional)" maxlength="200">
+      <button class="btn primary" type="submit">Save new version</button>
+      <button class="btn" type="button" hx-post="/admin/prompt-test" hx-vals='js:{draft: document.querySelector("#prompt textarea").value}'
+              hx-target="#evals" hx-swap="outerHTML" title="Score this text against the hand-labelled clips without saving it">Test without saving</button>
+    </div>
+  </form>
+  {% if prompt_active %}<p class="muted small">Active: version {{ prompt_active.id }}, since {{ prompt_active.activated_at | local('%b %d %H:%M') }}, used for {{ prompt_active.used }} transcript{{ 's' if prompt_active.used != 1 }}.</p>{% endif %}
+  <details class="history">
+    <summary>History ({{ prompt_history | length }} version{{ 's' if prompt_history | length != 1 }})</summary>
+    <ol>
+      {% for v in prompt_history %}
+      <li class="{{ 'active' if v.active }}">
+        <div class="history-head">
+          <b>Version {{ v.id }}</b> <span class="muted small">{{ v.created_at | local('%b %d %H:%M') }}{% if v.note %}: {{ v.note }}{% endif %} · {{ v.used }} transcript{{ 's' if v.used != 1 }}</span>
+          {% if v.active %}<span class="chip">active</span>{% else %}
+          <button class="btn small-btn" hx-post="/admin/versions/{{ v.id }}/activate" hx-target="#prompt" hx-swap="outerHTML">Make active</button>{% endif %}
+          <button class="btn small-btn" hx-post="/admin/prompt-test" hx-vals='{"version": {{ v.id }}}' hx-target="#evals" hx-swap="outerHTML">Test</button>
+        </div>
+        {% if v.diff %}<p class="diff">{% for op, t in v.diff %}{% if op == 'eq' %}{{ t }}{% elif op == 'del' %}<del>{{ t }}</del>{% else %}<ins>{{ t }}</ins>{% endif %}{% endfor %}</p>
+        {% else %}<p class="diff muted">{{ v.value }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </details>
+</section>

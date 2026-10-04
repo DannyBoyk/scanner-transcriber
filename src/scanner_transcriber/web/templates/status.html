@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Status{% endblock %}
+{% block content %}
+{% set cap = health.components.get('capture') %}
+{% set wk = health.components.get('worker') %}
+<h1>System status</h1>
+
+<section class="card overall level-{{ health.level }}">
+  {% if health.conditions %}
+  <ul class="conditions">
+    {% for c in health.conditions %}
+    <li class="level-{{ c.level }}"><span class="badge">{{ 'Problem' if c.level == 'error' else 'Warning' }}</span>
+      <span class="comp">{{ c.component }}</span> {{ c.message }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="allgood"><span class="dot"></span> All systems normal</p>
+  {% endif %}
+  <p class="muted small">Checked {{ health.checked_at | local('%H:%M:%S') }}</p>
+</section>
+
+<div class="grid">
+<section class="card">
+  <h2>Scanner</h2>
+  {% if cap %}
+  {% set d = cap.detail %}
+  <dl>
+    <dt>State</dt><dd>{{ cap.state }}{% if d.source == 'replay' %} (replay){% endif %}</dd>
+    {% if d.connected_since %}<dt>Connected since</dt><dd>{{ d.connected_since | local('%b %d %H:%M') }} ({{ d.connected_since | ago }})</dd>{% endif %}
+    {% if d.disconnected_at %}<dt>Unreachable since</dt><dd>{{ d.disconnected_at | local('%b %d %H:%M:%S') }} ({{ d.disconnected_at | ago }})</dd>{% endif %}
+    {% if d.last_error %}<dt>Last error</dt><dd class="mono">{{ d.last_error }}</dd>{% endif %}
+    <dt>Last audio</dt><dd>{{ d.last_audio_at | ago }}</dd>
+    <dt>Last status</dt><dd>{{ d.last_status_at | ago }}</dd>
+    <dt>Reconnects</dt><dd>{{ d.reconnects or 0 }}</dd>
+    <dt>RTP packets lost</dt><dd>{{ d.rtp_packets_lost or 0 }}</dd>
+    {% if d.current %}<dt>Hearing now</dt><dd>TG {{ d.current.tgid }} {{ d.current.department or '' }} / {{ d.current.channel or '' }}</dd>{% endif %}
+    <dt>Heartbeat</dt><dd>{{ cap.updated_at | ago }}</dd>
+  </dl>
+  {% else %}<p class="muted">Capture has never run.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Transcription</h2>
+  <dl>
+    {% if wk %}
+    <dt>Worker</dt><dd>{{ wk.state }}{% if wk.detail.model %} · <span class="mono small">{{ wk.detail.model }}</span>{% endif %}</dd>
+    {% if wk.detail.degraded_reason %}<dt>Degraded because</dt><dd class="mono">{{ wk.detail.degraded_reason }}</dd>{% endif %}
+    <dt>Heartbeat</dt><dd>{{ wk.updated_at | ago }}</dd>
+    {% else %}<dt>Worker</dt><dd class="muted">never started</dd>{% endif %}
+    <dt>Queue</dt><dd>{% for k, v in health.queue.by_status | dictsort %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% else %}empty{% endfor %}</dd>
+    {% if health.queue.oldest_queued_age_s %}<dt>Oldest waiting</dt><dd>{{ health.queue.oldest_queued_age_s | duration }}</dd>{% endif %}
+    <dt>Last hour</dt><dd>{{ stats.done_last_window }} transcribed{% if stats.done_last_window %}; latency {{ stats.latency_s_p50 }} s median, {{ stats.latency_s_p95 }} s p95{% endif %}</dd>
+    {% if stats.done_last_window %}<dt>Flagged / no speech</dt><dd>{{ '%.0f' % (stats.flagged_share * 100) }}% / {{ '%.0f' % (stats.no_speech_share * 100) }}%</dd>{% endif %}
+  </dl>
+</section>
+
+<section class="card">
+  <h2>Host</h2>
+  {% set hst = health.host %}
+  <dl>
+    <dt>Disk free</dt><dd>{{ '%.1f' % hst.disk_free_gb }} GB of {{ '%.0f' % hst.disk_total_gb }} GB ({{ '%.0f' % hst.disk_free_pct }}%)</dd>
+    {% if hst.cpu_temp_c %}<dt>CPU</dt><dd>{{ '%.0f' % hst.cpu_temp_c }} °C{% if hst.cpu_mhz %} @ {{ hst.cpu_mhz }} MHz{% endif %}</dd>{% endif %}
+    {% if hst.uptime_s %}<dt>Uptime</dt><dd>{{ hst.uptime_s | duration }}</dd>{% endif %}
+    {% if db_mb is not none %}<dt>Database</dt><dd>{{ db_mb }} MB</dd>{% endif %}
+    {% if stream %}<dt>Live stream</dt><dd>{% if stream.state == 'playing' %}playing, {{ stream.listeners }} listener{{ '' if stream.listeners == 1 else 's' }}{% else %}idle (starts when someone listens){% endif %}</dd>{% endif %}
+    <dt>Keeps</dt><dd class="small">audio {{ retention.audio_days or '∞' }} days, transcripts {{ retention.transcript_days or '∞' }} days, raw scanner data {{ retention.raw_days or '∞' }} days, events {{ retention.event_days or '∞' }} days</dd>
+    <dt>Last cleanup</dt><dd class="small">{% if retention_last %}{{ retention_last.at | local('%b %d %H:%M') }}: {{ retention_last.summary }}{% else %}not run yet{% endif %}</dd>
+  </dl>
+</section>
+</div>
+
+<section class="card">
+  <h2>Event log</h2>
+  <p class="filters">
+    <a href="/status" {% if not component %}aria-current="true"{% endif %}>All</a>
+    {% for c in components %}<a href="/status?component={{ c }}" {% if component == c %}aria-current="true"{% endif %}>{{ c }}</a>{% endfor %}
+  </p>
+  {% if events %}
+  <ol class="events">
+    {% for e in events %}
+    <li class="level-{{ e.level }}">
+      <time datetime="{{ e.at }}">{{ e.at | local('%b %d %H:%M:%S') }}</time>
+      <span class="comp">{{ e.component }}</span>
+      <span class="msg">{{ e.message }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="muted">No events in the last 30 days.</p>{% endif %}
+</section>
+{% endblock %}
