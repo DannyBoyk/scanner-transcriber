@@ -417,3 +417,27 @@ def test_backoff_runs_its_course_without_a_release(tmp_path, monkeypatch):
     t0 = time.monotonic()
     asyncio.run(src._sleep_until_retry(0.5))
     assert time.monotonic() - t0 >= 0.45
+
+
+_REAL_SESSION = net._LiveSession  # the autouse fixture swaps in FakeSession
+
+
+def test_packets_that_place_no_audio_do_not_count_as_audio():
+    # Regression: a timeline that drops every packet must look stale, so capture reconnects
+    # instead of reporting "streaming" while recording nothing.
+    import threading
+    from datetime import UTC, datetime
+    from types import SimpleNamespace
+
+    from scanner_transcriber.timeline import RtpTimeline
+
+    s = object.__new__(_REAL_SESSION)
+    s.offset, s.timeline, s._anchor = 0, RtpTimeline(), None
+    s._lock, s.last_audio_mono = threading.Lock(), None
+    s._put = lambda ev: None
+    payload = bytes([0xFF]) * 320
+    s._on_packet(SimpleNamespace(timestamp=0, payload=payload, observed_at=datetime.now(UTC)))
+    first = s.last_audio_mono
+    assert first is not None
+    s._on_packet(SimpleNamespace(timestamp=0, payload=payload, observed_at=datetime.now(UTC)))
+    assert s.last_audio_mono == first  # the repeat placed nothing

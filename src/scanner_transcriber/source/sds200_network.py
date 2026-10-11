@@ -324,7 +324,8 @@ class _LiveSession:
             start, pcm = self.timeline.place(pkt.timestamp, ulaw_to_pcm16(pkt.payload))
             end = self.offset + self.timeline.samples
             self._anchor = (mono, end)
-            self.last_audio_mono = mono
+            if pcm.size:  # packets that place no audio must not keep the stale check happy
+                self.last_audio_mono = mono
         if pcm.size:
             wall = pkt.observed_at - timedelta(seconds=pcm.size / SCANNER_RATE)
             self._put(AudioFrame(self.offset + start, pcm, wall))

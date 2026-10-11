@@ -22,6 +22,7 @@ from .config import SegmenterConfig
 from .models import AudioFrame, Clip, ScannerStatus
 
 _TRACKED = ("tgid", "channel", "department", "system", "unit_id")
+MAX_PENDING_STATUSES = 64  # ~16 s of PSI pushes (~4/s)
 
 
 class State(Enum):
@@ -50,7 +51,9 @@ class Segmenter:
         self.now = 0                      # end of the latest audio fed (sample index)
         self.status: ScannerStatus | None = None
         self._status_at: int | None = None  # sample position of the latest applied status
-        self._pending: deque[ScannerStatus] = deque()
+        # Bounded: statuses wait for the audio clock, so if audio stops they would pile up
+        # forever. Normally 0–1 are pending; dropping the oldest only happens in a stall.
+        self._pending: deque[ScannerStatus] = deque(maxlen=MAX_PENDING_STATUSES)
         self._ring: deque[AudioFrame] = deque()  # pre-roll while idle
         # open clip
         self._frames: list[AudioFrame] = []

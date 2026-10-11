@@ -20,9 +20,8 @@ class RtpTimeline:
     """
 
     def __init__(self) -> None:
-        self._base_ts: int | None = None
         self._last_rtp: int | None = None
-        self._offset = 0  # samples added across timestamp resets
+        self._last_pos = 0  # sample position of the last packet's start
         self.samples = 0  # total samples emitted so far = next sample index
         self.zero_filled = 0
         self.resets = 0
@@ -30,16 +29,18 @@ class RtpTimeline:
     def place(self, rtp_timestamp: int, pcm: np.ndarray) -> tuple[int, np.ndarray]:
         """Returns (start sample index, pcm to append). May return an empty array."""
         ts = rtp_timestamp & 0xFFFFFFFF
-        if self._base_ts is None:
-            self._base_ts = ts
-        elif self._last_rtp is not None:
+        if self._last_rtp is None:
+            pos = self.samples
+        else:
+            # Step from the previous packet, never from a fixed base: a base-relative distance
+            # wraps after 2^32 samples (6.2 days at 8 kHz) and then every packet looks old.
             delta = (ts - self._last_rtp) & 0xFFFFFFFF
             if delta > MAX_GAP_FILL_S * SCANNER_RATE:  # backwards or absurd jump
                 self.resets += 1
-                self._offset = self.samples
-                self._base_ts = ts
-        self._last_rtp = ts
-        pos = self._offset + ((ts - self._base_ts) & 0xFFFFFFFF)
+                pos = self.samples
+            else:
+                pos = self._last_pos + delta
+        self._last_rtp, self._last_pos = ts, pos
         start = self.samples
         if pos > self.samples:
             gap = pos - self.samples

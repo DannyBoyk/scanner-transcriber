@@ -149,3 +149,17 @@ def test_unit_split_can_be_disabled():
            .hold(5.6, 8.0, "Mute", "1101"))
     [c] = run(Segmenter(cfg), sim)
     assert c.unit_ids == ["UID:1", "UID:2"]
+
+
+def test_pending_statuses_are_bounded_when_audio_stops():
+    # Statuses wait for the audio clock; if audio stops they must not pile up without limit.
+    from datetime import timedelta
+
+    from scanner_transcriber.models import ScannerStatus
+    from scanner_transcriber.segmenter import MAX_PENDING_STATUSES
+
+    seg = Segmenter(CFG)
+    for i in range(1000):
+        seg.feed_status(ScannerStatus(mono=float(i), wall=T0 + timedelta(seconds=i),
+                                      sample=float(RATE * (i + 1)), mute="Mute"))
+    assert len(seg._pending) == MAX_PENDING_STATUSES

@@ -50,3 +50,18 @@ def test_anchor_clock_roundtrip():
     assert c.to_sample(100.5) == 4000
     assert c.to_sample(102.0) == 16010
     assert abs(c.to_mono(12000) - 101.5) < 1e-9
+
+
+def test_keeps_placing_audio_after_2_pow_32_samples():
+    # Regression: positions were measured from the first timestamp, so after 2^32 samples
+    # (6.2 days at 8 kHz) every packet looked like a repeat and the audio silently stopped.
+    t = RtpTimeline()
+    base = 12345
+    t.place(base, pkt())
+    # fast-forward ~6.2 days of contiguous audio without allocating it
+    t.samples, t._last_pos = 2**32, 2**32 - 320
+    t._last_rtp = (base + 2**32 - 320) & 0xFFFFFFFF
+    for i in range(4):
+        start, pcm = t.place((base + 2**32 + i * 320) & 0xFFFFFFFF, pkt())
+        assert start == 2**32 + i * 320 and len(pcm) == 320
+    assert t.resets == 0 and t.zero_filled == 0
