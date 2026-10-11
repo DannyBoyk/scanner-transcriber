@@ -2,9 +2,9 @@
 import json
 from datetime import UTC, datetime, timedelta
 
-from scanner_transcriber.web.changes import ChangeFeed, cursor_from_event_id, event_id
-
 from test_feed import add
+
+from scanner_transcriber.web.changes import ChangeFeed, cursor_from_event_id, event_id
 
 
 def at(offset_s):
@@ -115,7 +115,7 @@ def test_events_stream_sends_rows_and_status(env):
     assert "status" in kinds and "tx" in kinds
     txe = next(e for e in evs if e["event"] == "tx")
     payload = json.loads(txe["data"])
-    assert payload["id"] == tx and 'id="tx-%d"' % tx in payload["item"]
+    assert payload["id"] == tx and f'id="tx-{tx}"' in payload["item"]
     assert "Medic 3 en route" in payload["item"] and 'class="xhead"' in payload["head"]
     assert txe["id"].endswith(f"|{tx}")
     status = json.loads(next(e for e in evs if e["event"] == "status")["data"])

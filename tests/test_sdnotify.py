@@ -3,12 +3,12 @@ import asyncio
 import socket
 from dataclasses import replace
 
+from segsim import Sim
+from test_replay_app import write_session
+
 from scanner_transcriber import app, sdnotify
 from scanner_transcriber.config import Config, StorageConfig
 from scanner_transcriber.source.replay import ReplaySource
-
-from segsim import Sim
-from test_replay_app import write_session
 
 
 def listen(tmp_path, monkeypatch):

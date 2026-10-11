@@ -3,9 +3,8 @@ save + revert, logout. Saves a screenshot of the Admin page if a path is given."
 import sys
 import time
 
-from selenium.webdriver.common.by import By
-
 from common import BASE, browser, check, connect, finish, wait
+from selenium.webdriver.common.by import By
 
 DB, PASSWORD = sys.argv[1], sys.argv[2]
 SHOT = sys.argv[3] if len(sys.argv) > 3 else None

@@ -1,8 +1,8 @@
 """Re-transcribe batches: selection, cap, low priority behind live clips, compare view."""
 
-from scanner_transcriber import jobs, retranscribe
-
 from test_feed import T0, add
+
+from scanner_transcriber import jobs, retranscribe
 
 HX = {"HX-Request": "true"}
 SINCE = T0.isoformat()

@@ -1,10 +1,10 @@
 import multiprocessing as mp
 from datetime import UTC, datetime, timedelta
 
+from test_db import clip
+
 from scanner_transcriber import db, jobs
 from scanner_transcriber.clipstore import ClipStore
-
-from test_db import clip
 
 
 def add(conn, tmp_path, t=0.0, **kw):

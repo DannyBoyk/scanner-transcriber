@@ -2,14 +2,14 @@ import asyncio
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+from segsim import Sim
+from test_replay_app import write_session
+
 from scanner_transcriber import db, statestore
 from scanner_transcriber.app import run_pipeline
 from scanner_transcriber.config import Config, StorageConfig
 from scanner_transcriber.monitoring import CaptureReporter, HealthMonitor
 from scanner_transcriber.source.replay import ReplaySource
-
-from segsim import Sim
-from test_replay_app import write_session
 
 
 def events(conn):

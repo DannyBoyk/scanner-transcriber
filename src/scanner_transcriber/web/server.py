@@ -14,22 +14,40 @@ from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta, tzinfo
 from functools import lru_cache
+from itertools import pairwise
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
-from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse, RedirectResponse,
-                               StreamingResponse)
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from .. import (auth, cleanstart, commands, db, health, jobs, logsetup, prompteval, promptstore,
-               retention, retranscribe, statestore)
-from . import admin, changes, feed, search
 from .. import audio as audio_mod
-from . import stream as stream_mod
+from .. import (
+    auth,
+    cleanstart,
+    commands,
+    db,
+    health,
+    jobs,
+    logsetup,
+    prompteval,
+    promptstore,
+    retention,
+    retranscribe,
+    statestore,
+)
 from ..config import Config
+from . import admin, changes, feed, search
+from . import stream as stream_mod
 
 HERE = Path(__file__).parent
 POLL_S = 0.5          # change-feed poll interval
@@ -182,7 +200,7 @@ def create_app(cfg: Config) -> FastAPI:
         ctx: dict = {}
         for kind in promptstore.KINDS:
             hist = promptstore.history(conn, kind)
-            for newer, older in zip(hist, hist[1:]):
+            for newer, older in pairwise(hist):
                 if kind == "prompt":
                     newer["diff"] = admin.word_diff(older["value"], newer["value"])
                 else:
@@ -972,7 +990,6 @@ def byte_range_response(request: Request, data: bytes, media_type: str) -> Respo
         return Response(status_code=416, headers={**headers, "Content-Range": f"bytes */{size}"})
     headers["Content-Range"] = f"bytes {start}-{end}/{size}"
     return Response(data[start:end + 1], status_code=206, media_type=media_type, headers=headers)
-    return app
 
 
 def bind_host(bind: str) -> str:

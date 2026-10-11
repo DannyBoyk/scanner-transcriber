@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import multiprocessing as mp
+import queue
 import re
 import resource
 import time
@@ -193,7 +194,7 @@ def run(clips_dir: Path, refs_path: Path | None, candidates: list[Candidate],
             try:
                 result = q.get(timeout=1)
                 break
-            except Exception:  # queue.Empty
+            except queue.Empty:
                 continue
         p.join()
         if result is None:

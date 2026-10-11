@@ -1,11 +1,11 @@
 """Admin password, sessions, rate limiting, fail-closed, and what's protected."""
 import time
 
-from scanner_transcriber import auth
-from scanner_transcriber.auth import LoginLimiter
-
 from conftest import login
 from test_channels import save_clip, url
+
+from scanner_transcriber import auth
+from scanner_transcriber.auth import LoginLimiter
 
 HX = {"HX-Request": "true"}
 

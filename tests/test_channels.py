@@ -4,12 +4,11 @@ from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
 import numpy as np
+from test_changes import parse_sse
+from test_feed import T0
 
 from scanner_transcriber.clipstore import ClipStore
 from scanner_transcriber.models import Clip, ScannerStatus
-
-from test_changes import parse_sse
-from test_feed import T0
 
 HX = {"HX-Request": "true"}
 

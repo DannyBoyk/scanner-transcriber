@@ -30,7 +30,7 @@ def wait(fn, t: float | None = None, step: float = 0.2) -> bool:
         try:
             if fn():
                 return True
-        except Exception:
+        except Exception:  # noqa: BLE001 — page still changing: keep polling
             pass
         time.sleep(step)
     return False

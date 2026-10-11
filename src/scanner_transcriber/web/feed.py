@@ -9,6 +9,7 @@ import sqlite3
 import zlib
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta, tzinfo
+from itertools import pairwise
 
 COLUMNS = """t.id, t.started_at, t.ended_at, t.duration_ms, t.system, t.department, t.channel,
              t.tgid, t.unit_id, t.unit_ids, t.status, t.transcript, t.flags, t.no_speech,
@@ -202,7 +203,7 @@ def present(rows: list[sqlite3.Row], tz: tzinfo | None) -> list[Row]:
             flags=json.loads(r["flags"]) if r["flags"] else [],
             has_audio=bool(r["audio_path"]), cursor=encode_cursor(r["started_at"], r["id"]),
             color=r["color"]))
-    for newer_row, older_row in zip(out, out[1:]):
+    for newer_row, older_row in pairwise(out):
         older_row.cont = same_exchange(newer_row, older_row, tz)
     return out
 

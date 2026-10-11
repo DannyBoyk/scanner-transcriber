@@ -3,12 +3,11 @@ from datetime import timedelta
 
 import numpy as np
 import pytest
+from segsim import T0
 
 from scanner_transcriber import db
 from scanner_transcriber.clipstore import ClipStore
 from scanner_transcriber.models import Clip, ScannerStatus
-
-from segsim import T0
 
 
 def status(tgid="1101", **kw):

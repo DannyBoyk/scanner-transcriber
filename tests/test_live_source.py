@@ -4,12 +4,12 @@ import time
 
 import numpy as np
 import pytest
+from sds200.exceptions import ScannerConnectionError
+from segsim import T0
 
 from scanner_transcriber.config import ScannerConfig
 from scanner_transcriber.models import AudioFrame
 from scanner_transcriber.source import sds200_network as net
-
-from segsim import T0
 
 
 class FakeSession:
@@ -39,7 +39,6 @@ class FakeSession:
             try:
                 raise ConnectionRefusedError(111, "Connection refused")
             except ConnectionRefusedError as e:
-                from sds200.exceptions import ScannerConnectionError
                 raise ScannerConnectionError("Could not start SDS200 network audio") from e
         self.phase = "streaming"
         if self.behaviour == "ok":
@@ -144,7 +143,6 @@ def test_state_reports_through_reconnect(tmp_path):
 
 def test_rtsp_refusal_reports_session_busy(tmp_path, monkeypatch):
     from sds200.rtsp import RtspStatusError
-    from sds200.exceptions import ScannerConnectionError
 
     class Refused(FakeSession):
         def start(self):
@@ -308,7 +306,7 @@ def test_failed_keepalive_parks_the_socket_with_a_teardown_that_goes_out_later(m
     c = net._ParkingRtspClient("127.0.0.1", port=srv.getsockname()[1], timeout=0.3)
     c.connect(); t.join(2)
     c._session = "ABC123"                              # as after SETUP
-    with pytest.raises(Exception):
+    with pytest.raises(ScannerConnectionError):
         c.get_parameter()                              # "link down": no answer → timeout
     assert c._socket is None and len(net.parking) == 1
     # "link back": the scanner reads what was queued and answers both requests
@@ -331,7 +329,7 @@ def test_failed_teardown_is_parked_not_dropped():
     c = net._ParkingRtspClient("127.0.0.1", port=srv.getsockname()[1], timeout=0.3)
     c.connect(); t.join(2)
     c._session = "S1"
-    with pytest.raises(Exception):
+    with pytest.raises(ScannerConnectionError):
         c.teardown()
     assert len(net.parking) == 1
     conn = box["conn"]
@@ -348,7 +346,7 @@ def test_no_session_means_no_parking():
     srv, box, t = fake_rtsp_server()
     c = net._ParkingRtspClient("127.0.0.1", port=srv.getsockname()[1], timeout=0.3)
     c.connect(); t.join(2)
-    with pytest.raises(Exception):
+    with pytest.raises(ScannerConnectionError):
         c.options()                                    # before SETUP: nothing to tear down
     assert len(net.parking) == 0
     box["conn"].close(); srv.close()
@@ -372,7 +370,7 @@ def test_failed_request_without_a_session_is_reset_not_half_closed():
     srv, box, t = fake_rtsp_server()
     c = net._ParkingRtspClient("127.0.0.1", port=srv.getsockname()[1], timeout=0.3)
     c.connect(); t.join(2)
-    with pytest.raises(Exception):
+    with pytest.raises(ScannerConnectionError):
         c.options()                                    # scanner slow to answer: timeout
     conn = box["conn"]; conn.settimeout(2)
     got = b""
@@ -403,9 +401,10 @@ def test_backoff_ends_early_when_a_parked_teardown_is_answered(tmp_path, monkeyp
         async def release_soon():
             await asyncio.sleep(0.3)
             net.parking.last_released = time.monotonic()   # the parking thread does this
-        asyncio.ensure_future(release_soon())
+        release = asyncio.ensure_future(release_soon())
         t0 = time.monotonic()
         await src._sleep_until_retry(30)
+        await release
         return time.monotonic() - t0
     took = asyncio.run(main())
     assert 0.25 < took < 2.0

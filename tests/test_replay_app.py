@@ -4,13 +4,13 @@ import json
 from dataclasses import replace
 from datetime import datetime
 
+from segsim import RATE, T0, Sim
+
 from scanner_transcriber import db
 from scanner_transcriber.app import run_pipeline
 from scanner_transcriber.audio import write_wav
 from scanner_transcriber.config import Config, StorageConfig
 from scanner_transcriber.source.replay import ReplaySource
-
-from segsim import RATE, T0, Sim
 
 
 def write_session(d, sim: Sim, mono0=5000.0):
@@ -61,6 +61,7 @@ def _two_ptt_session(tmp_path):
 
 def test_a_failed_save_is_retried_and_capture_goes_on(tmp_path, monkeypatch):
     import sqlite3
+
     from scanner_transcriber import app
     from scanner_transcriber.clipstore import ClipStore
     cfg = _two_ptt_session(tmp_path)

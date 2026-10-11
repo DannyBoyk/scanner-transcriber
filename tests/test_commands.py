@@ -4,13 +4,12 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from test_live_source import FakeSession
 
 from scanner_transcriber import commands, statestore
 from scanner_transcriber.app import handle_commands
 from scanner_transcriber.config import Config, ScannerConfig, StorageConfig
 from scanner_transcriber.source import sds200_network as net
-
-from test_live_source import FakeSession
 
 
 def test_post_take_done_and_expire(conn):

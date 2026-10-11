@@ -42,7 +42,8 @@ def test_wav_roundtrip(tmp_path):
 
 def test_level_brings_quiet_speech_to_target_without_clipping():
     import numpy as np
-    from scanner_transcriber.audio import level, LEVEL_TARGET_DBFS
+
+    from scanner_transcriber.audio import LEVEL_TARGET_DBFS, level
     rng = np.random.default_rng(1)
     quiet = (rng.normal(0, 0.03, 8000) * 32767).astype(np.int16)        # about -30 dBFS
     padded = np.concatenate([np.zeros(4000, np.int16), quiet, np.zeros(4000, np.int16)])
@@ -56,7 +57,8 @@ def test_level_brings_quiet_speech_to_target_without_clipping():
 
 def test_level_caps_the_gain_and_leaves_silence_alone():
     import numpy as np
-    from scanner_transcriber.audio import level, LEVEL_MAX_GAIN_DB
+
+    from scanner_transcriber.audio import LEVEL_MAX_GAIN_DB, level
     faint = np.full(1000, 10, np.int16)                                   # about -70 dBFS
     assert np.max(level(faint)) <= round(10 * 10 ** (LEVEL_MAX_GAIN_DB / 20)) + 1
     assert not np.any(level(np.zeros(500, np.int16)))

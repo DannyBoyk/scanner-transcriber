@@ -10,8 +10,8 @@ import time
 from dataclasses import dataclass
 
 from . import commands, db, prompteval, sdnotify, statestore
-from .clipstore import ClipStore
 from .audio import write_wav
+from .clipstore import ClipStore
 from .config import Config
 from .models import AudioFrame
 from .monitoring import CaptureReporter, HealthMonitor
@@ -282,7 +282,7 @@ def _retention_once(cfg: Config) -> None:
         conn.close()
 
 
-async def handle_commands(cfg: Config, source, sup: "WorkerSupervisor | None") -> None:
+async def handle_commands(cfg: Config, source, sup: WorkerSupervisor | None) -> None:
     """Act on Admin-page commands addressed to this process."""
     conn = db.connect(cfg.storage.db_path)
     try:

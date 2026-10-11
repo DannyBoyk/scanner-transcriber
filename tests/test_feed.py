@@ -2,12 +2,11 @@
 import json
 from datetime import UTC, datetime, timedelta
 
+import numpy as np
 import pytest
 
 from scanner_transcriber.audio import write_wav
 from scanner_transcriber.web import feed
-
-import numpy as np
 
 T0 = datetime(2026, 9, 30, 16, 0, tzinfo=UTC)  # 12:00 EDT
 

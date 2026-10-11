@@ -4,17 +4,15 @@ import asyncio
 import time
 
 import numpy as np
+from test_feed import add
 
 from scanner_transcriber.audio import write_wav
 from scanner_transcriber.web.stream import STREAM_RATE, Station
 
-from test_feed import add
-
 
 def station(d, **kw):
-    opts = dict(chunk_s=0.05, ahead_s=0.2, poll_s=0.05, pause_s=0.1, idle_stop_s=0.3,
-                backlog_s=0.5, intro_s=0.1)
-    opts.update(kw)
+    opts = {"chunk_s": 0.05, "ahead_s": 0.2, "poll_s": 0.05, "pause_s": 0.1, "idle_stop_s": 0.3,
+            "backlog_s": 0.5, "intro_s": 0.1, **kw}
     return Station(d / "scanner.db", d, **opts)
 
 

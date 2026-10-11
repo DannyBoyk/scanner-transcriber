@@ -49,3 +49,31 @@ packages = ["src/scanner_transcriber"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Explicit, so a ruff upgrade can't silently change what is checked.
+select = ["E4", "E7", "E9", "F", "B", "BLE", "C4", "FURB", "I", "PYI", "RUF", "SIM", "UP"]
+ignore = [
+    "B008",    # FastAPI's Depends(...) in defaults is the idiom
+    "RUF012",  # mutable class attributes in test fakes and state holders are intended
+    "RUF059",  # unused names from tuple unpacking document the shape
+    "SIM115",  # long-lived file handles (recorder, test fixtures) are closed explicitly
+    "RUF100",  # `# noqa: BLE001 — why` marks every deliberate broad except, even where ruff
+               # wouldn't flag it (it logs); --fix must not strip those explanations
+    # house style
+    "E702",    # short `a; b` one-liners
+    "E731",    # named lambdas
+    "SIM105",  # try/except/pass over contextlib.suppress
+    "RUF005",  # [*a, b] vs a + [b]
+    "B905",    # zip() without strict=
+    "RUF001", "RUF003",  # en dashes in strings and comments are intended
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Selenium checks: lambdas inside loops are always called in the same iteration.
+"tests/ui/*" = ["B023"]
+"tests/*" = ["E402"]  # imports next to the tests that need them

@@ -20,7 +20,7 @@ def _model_path(repo: str) -> str:
 
     try:
         return snapshot_download(repo, local_files_only=True)
-    except Exception:
+    except Exception:  # noqa: BLE001 — not cached (or cache unreadable): download
         log.info("downloading %s", repo)
         return snapshot_download(repo)
 

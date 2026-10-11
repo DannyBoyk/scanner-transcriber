@@ -3,15 +3,13 @@ import threading
 from dataclasses import replace
 
 import numpy as np
-import pytest
+from test_db import clip
 
 from scanner_transcriber import db
 from scanner_transcriber.clipstore import ClipStore
 from scanner_transcriber.config import Config, StorageConfig, TranscribeConfig
 from scanner_transcriber.stt.base import SttResult
 from scanner_transcriber.worker import Transcriber, run_worker
-
-from test_db import clip
 
 PROMPT = "Northfield, Ashford, Brookfield. Alpha, Bravo, Charlie, Delta, Echo."
 X = np.zeros(16000, np.float32)
@@ -163,6 +161,7 @@ def test_real_one_word_reply_survives_speech_check(tmp_path):
 
 def test_worker_survives_a_database_error_in_its_loop(tmp_path, monkeypatch):
     import sqlite3
+
     from scanner_transcriber import jobs, worker
     ids = queue_clips(tmp_path, 2)
     t = make(tmp_path, Fake("ovwhisper", "Go ahead."))

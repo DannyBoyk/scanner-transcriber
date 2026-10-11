@@ -3,6 +3,7 @@ import json
 from dataclasses import replace
 
 import numpy as np
+from test_worker import queue_clips, rows
 
 from scanner_transcriber import commands, db, promptstore
 from scanner_transcriber.audio import write_wav
@@ -10,8 +11,6 @@ from scanner_transcriber.config import Config, StorageConfig, TranscribeConfig
 from scanner_transcriber.prompteval import edit_distance, labelled_clips
 from scanner_transcriber.stt.base import SttResult
 from scanner_transcriber.worker import Transcriber, run_worker
-
-from test_worker import queue_clips, rows
 
 
 def make_session(d, refs):
@@ -27,7 +26,7 @@ def test_labelled_clips_and_edit_distance(tmp_path):
     make_session(tmp_path, [("0001", "Medic 3 en route", False), ("0002", "mumble", True)])
     clips = labelled_clips(tmp_path)
     assert [c[0] for c in clips] == ["20260930T000000Z/0001"]
-    assert edit_distance("a b c".split(), "a x c d".split()) == 2
+    assert edit_distance(["a", "b", "c"], ["a", "x", "c", "d"]) == 2
 
 
 class PromptSensitive:

@@ -1,12 +1,12 @@
 """Prompt/substitution versions: import once, save/activate/revert, and worker hot reload."""
 from dataclasses import replace
 
+from test_worker import queue_clips, rows
+
 from scanner_transcriber import db, promptstore
 from scanner_transcriber.config import Config, StorageConfig, TranscribeConfig
 from scanner_transcriber.stt.base import SttResult
 from scanner_transcriber.worker import Transcriber, run_worker
-
-from test_worker import queue_clips, rows
 
 
 def cfg(tmp_path, **stt):

@@ -1,12 +1,11 @@
 """Edit talkgroup settings in a real browser (scratch web instance): alias, colour, toggles.
 Editing needs the admin login (M4.5): pass the scratch password as the second argument."""
 import sys
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+from datetime import UTC, datetime
 
 from common import BASE, browser, check, connect, finish, insert_tx, now, wait
-from datetime import UTC, datetime
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 DB, PASSWORD = sys.argv[1], sys.argv[2]
 conn = connect(DB)
@@ -27,7 +26,7 @@ try:
     check("row redraws with 'Saved'", wait(lambda: "Saved" in d.find_element(By.CSS_SELECTOR, "li.ch").text))
     d.find_elements(By.CSS_SELECTOR, "li.ch .swatch-btn")[3].click()
     check("colour saved", wait(lambda: conn.execute("SELECT color FROM channels").fetchone()[0] == 3))
-    btn = [b for b in d.find_elements(By.CSS_SELECTOR, "li.ch .toggle-btn") if "Live feed" in b.text][0]
+    btn = next(b for b in d.find_elements(By.CSS_SELECTOR, "li.ch .toggle-btn") if "Live feed" in b.text)
     btn.click()
     check("hidden toggled", wait(lambda: conn.execute("SELECT hidden FROM channels").fetchone()[0] == 1))
     check("button now says hidden", wait(lambda: "Live feed: hidden" in d.find_element(By.CSS_SELECTOR, "li.ch").text))

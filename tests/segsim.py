@@ -19,17 +19,17 @@ class Sim:
     speech: list[tuple[float, float, int]] = field(default_factory=list)  # (start, end, amp)
     statuses: list[tuple[float, dict]] = field(default_factory=list)
 
-    def talk(self, start: float, end: float, amp: int = 1000) -> "Sim":
+    def talk(self, start: float, end: float, amp: int = 1000) -> Sim:
         self.speech.append((start, end, amp))
         return self
 
-    def status(self, t: float, mute: str, tgid: str | None = None, **kw) -> "Sim":
+    def status(self, t: float, mute: str, tgid: str | None = None, **kw) -> Sim:
         self.statuses.append((t, {"mute": mute, "tgid": tgid, "system": "Sys",
                                   "department": f"Dept{tgid}", "channel": f"Ch{tgid}", **kw}))
         return self
 
     def hold(self, start: float, end: float, mute: str, tgid: str | None = None,
-             every: float = 0.25, **kw) -> "Sim":
+             every: float = 0.25, **kw) -> Sim:
         """Repeat a status like the scanner's PSI push (~4/s) over [start, end)."""
         t = start
         while t < end - 1e-9:
@@ -38,7 +38,7 @@ class Sim:
         return self
 
     def ptt(self, start: float, end: float, tgid: str, unit: str | None = None,
-            amp: int = 1000, lag: float = 0.1) -> "Sim":
+            amp: int = 1000, lag: float = 0.1) -> Sim:
         """A transmission: status Unmute slightly after speech starts, Mute after it ends."""
         self.talk(start, end, amp)
         self.status(start + lag, "Unmute", tgid, unit_id=unit)

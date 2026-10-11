@@ -100,7 +100,9 @@ def test_audio_ranges_for_safari(env):
 
 
 def test_audio_is_levelled_with_range_support_and_download_is_original(env):
-    import io, wave
+    import io
+    import wave
+
     import numpy as np
     from test_feed import add
     conn, client, d = env

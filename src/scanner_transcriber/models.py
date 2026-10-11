@@ -38,7 +38,7 @@ class ScannerStatus:
 
     @classmethod
     def from_summary(cls, summary: dict, *, mono: float, wall: datetime,
-                     sample: float | None, raw_xml: str = "") -> "ScannerStatus":
+                     sample: float | None, raw_xml: str = "") -> ScannerStatus:
         names = cls.__dataclass_fields__.keys() - {"mono", "wall", "sample", "raw_xml"}
         return cls(mono=mono, wall=wall, sample=sample, raw_xml=raw_xml,
                    **{k: summary.get(k) for k in names})

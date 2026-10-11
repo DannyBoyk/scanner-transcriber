@@ -5,6 +5,7 @@ import difflib
 import functools
 import logging
 import re
+from itertools import pairwise
 
 from .. import guards
 
@@ -60,7 +61,7 @@ def leak_hints(prompt: str) -> list[str]:
     hints = []
     for sentence in re.split(r"[.;]\s*", prompt):
         items = [i.strip() for i in sentence.split(",") if i.strip()]
-        for a, b in zip(items, items[1:]):
+        for a, b in pairwise(items):
             if a[:1].islower() and b[:1].islower() and len(guards.words(f"{a} {b}")) >= 4:
                 hints.append(f"{a}, {b}")
     return hints

@@ -1,10 +1,10 @@
 """Search semantics: stems, partial words, phrases, exclusions, filters, paging, highlighting."""
 
+from test_feed import T0, add
+
 from scanner_transcriber.web import search
 from scanner_transcriber.web.feed import encode_cursor
 from scanner_transcriber.web.search import Filters, Term, highlight, parse
-
-from test_feed import T0, add
 
 
 def found(conn, q, f=Filters(), **kw):

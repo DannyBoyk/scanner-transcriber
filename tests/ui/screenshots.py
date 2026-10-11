@@ -11,10 +11,9 @@ import threading
 import time
 from datetime import UTC, datetime, timedelta
 
-from selenium.webdriver.common.by import By
-
 import common
 from common import BASE, browser, connect, wait
+from selenium.webdriver.common.by import By
 
 DB, OUT = sys.argv[1], sys.argv[2]
 PASSWORD = "demo-pass-123"

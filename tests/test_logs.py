@@ -16,10 +16,10 @@ def test_setup_writes_file_and_tail_filters(tmp_path):
     for h in logging.getLogger().handlers:
         h.flush()
     lines = logsetup.tail(tmp_path, "worker")
-    assert [l["level"] for l in lines] == ["INFO", "WARNING", "ERROR"]
+    assert [ln["level"] for ln in lines] == ["INFO", "WARNING", "ERROR"]
     assert "Traceback" in lines[-1]["text"] and "ValueError: boom" in lines[-1]["text"]  # kept together
     warn = logsetup.tail(tmp_path, "worker", min_level="WARNING")
-    assert [l["level"] for l in warn] == ["WARNING", "ERROR"]
+    assert [ln["level"] for ln in warn] == ["WARNING", "ERROR"]
     assert logsetup.tail(tmp_path, "web") == []                         # no file yet
     logging.getLogger().handlers.clear()
 

@@ -14,7 +14,7 @@ import time
 from collections.abc import AsyncIterator, Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 from sds200 import SDSScanner
 from sds200.exceptions import SDS200Error
@@ -101,7 +101,7 @@ class AudioSessionLock:
         self.path = path
         self._fd: int | None = None
 
-    def __enter__(self) -> "AudioSessionLock":
+    def __enter__(self) -> Self:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         fd = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o644)
         try:

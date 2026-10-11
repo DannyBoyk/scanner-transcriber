@@ -1,9 +1,9 @@
 from dataclasses import replace
 
+from segsim import RATE, T0, Sim, run
+
 from scanner_transcriber.config import SegmenterConfig
 from scanner_transcriber.segmenter import Segmenter
-
-from segsim import RATE, T0, Sim, run
 
 CFG = SegmenterConfig()
 

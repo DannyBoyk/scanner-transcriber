@@ -4,11 +4,11 @@ import os
 import time
 from dataclasses import replace
 
+from test_feed import add
+
 from scanner_transcriber import cleanstart, commands, promptstore, statestore
 from scanner_transcriber.app import handle_commands
 from scanner_transcriber.config import Config, StorageConfig
-
-from test_feed import add
 
 
 def populate(conn, d):

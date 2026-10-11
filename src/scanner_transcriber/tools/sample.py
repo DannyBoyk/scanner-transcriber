@@ -27,7 +27,7 @@ def pick(rows: list[sqlite3.Row], n: int, seed: int = 1,
     spread over time within each group. Fills from the other groups if one runs short."""
     rng = random.Random(seed)
     short = [r for r in rows if r["duration_ms"] <= SHORT_MS]
-    unit_or_place = re.compile("|".join([UNIT_OPENER] + [re.escape(p) for p in places]), re.I)
+    unit_or_place = re.compile("|".join([UNIT_OPENER] + [re.escape(p) for p in places]), re.IGNORECASE)
     units = [r for r in rows if r["duration_ms"] > SHORT_MS and unit_or_place.search(r["transcript"] or "")]
     taken = {r["id"] for r in short + units}
     rest = [r for r in rows if r["id"] not in taken]

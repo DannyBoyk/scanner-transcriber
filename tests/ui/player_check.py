@@ -7,12 +7,11 @@ import wave
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import common
 import numpy as np
+from common import BASE, browser, check, connect, finish, insert_tx
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-
-import common
-from common import BASE, browser, check, connect, finish, insert_tx
 
 DB, DATA = sys.argv[1], Path(sys.argv[2])
 conn = connect(DB)
@@ -50,9 +49,9 @@ try:
     d.find_element(By.CSS_SELECTOR, "[data-play-all]").click()
     check("player bar appears", wait(lambda: js("return !document.getElementById('player-bar').hidden")))
     check("live mode is labelled: '● Live' with what happens next",
-          wait(lambda: d.find_element(By.CSS_SELECTOR, ".pb-mode").is_displayed()
+          wait(lambda: (d.find_element(By.CSS_SELECTOR, ".pb-mode").is_displayed()
                and d.find_element(By.CSS_SELECTOR, ".pb-mode-name").text == "Live"
-               and "then live" in d.find_element(By.CSS_SELECTOR, ".pb-mode-info").text
+               and "then live" in d.find_element(By.CSS_SELECTOR, ".pb-mode-info").text)
                or "newest" in d.find_element(By.CSS_SELECTOR, ".pb-mode-info").text))
     check("…the stop button says 'Stop listening'", "Stop listening" in d.find_element(By.CSS_SELECTOR, "[data-pb=stop]").text)
     check("…first time: the hint explains it keeps going",
